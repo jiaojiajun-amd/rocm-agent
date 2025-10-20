@@ -88,6 +88,9 @@ def get_model_class(model_name: str, model_class: str = "") -> type:
     it takes precedence over the `model_name`.
     Otherwise, the model_name is used to select the best model class.
     """
+    from minisweagent.models.qwen import QwenModel
+    return QwenModel
+    
     if model_class:
         full_path = _MODEL_CLASS_MAPPING.get(model_class, model_class)
         try:
