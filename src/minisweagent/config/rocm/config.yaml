@@ -209,11 +209,11 @@ agent:
 
     If you have completed your assignment, please consult the first message about how to
     submit your solution (you will not be able to continue working on this task after that).
-  step_limit: 10
+  step_limit: 20
   cost_limit: 3.
 
 environment:
-  cwd: "/testbed"
+  cwd: "/app/rocm-libraries/projects/rocprim"
   timeout: 60
   env:
     PAGER: cat
