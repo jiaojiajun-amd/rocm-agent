@@ -2,15 +2,15 @@
 
 set -e
 
-export N_GPUS=4
-export BASE_MODEL=Qwen/Qwen3-8B
+export N_GPUS=8
+export BASE_MODEL=Qwen/Qwen3-4B
 export DATA_DIR=data
 export ROLLOUT_TP_SIZE=1
-export EXPERIMENT_NAME=qwen3-8b-from-scrach-4k-10-turn-32k-prompt-len
+export EXPERIMENT_NAME=qwen3-4b-from-scrach-4k-10-turn-32k-prompt-len
 export PROJECT_NAME=rocm-agent-rl-test
 export VLLM_USE_V1=1
-export SP=2
-export HIP_VISIBLE_DEVICES=4,5,6,7
+export SP=1
+export HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 echo "Starting training script..."
 
@@ -21,12 +21,11 @@ python -m agentlightning.verl \
     actor_rollout_ref.rollout.tensor_model_parallel_size=$ROLLOUT_TP_SIZE \
     actor_rollout_ref.actor.ulysses_sequence_parallel_size=${SP} \
     trainer.n_gpus_per_node=${N_GPUS} \
-    data.train_batch_size=8 \
+    data.train_batch_size=15 \
     actor_rollout_ref.rollout.n=8 \
-    actor_rollout_ref.rollout.val_kwargs.n=8 \
     actor_rollout_ref.actor.ppo_mini_batch_size=8 \
-    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
-    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
+    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=4 \
+    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=4 \
     actor_rollout_ref.rollout.multi_turn.format=hermes \
     actor_rollout_ref.model.path=${BASE_MODEL} \
     data.max_prompt_length=32768 \
@@ -56,5 +55,5 @@ python -m agentlightning.verl \
     trainer.default_local_dir=/app/checkpoints/${PROJECT}/${EXP} \
     trainer.nnodes=1 \
     trainer.save_freq=10 \
-    trainer.test_freq=10 \
+    trainer.test_freq=5 \
     trainer.total_epochs=50 $@

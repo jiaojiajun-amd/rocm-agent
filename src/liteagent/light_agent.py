@@ -90,7 +90,7 @@ def get_hip_bench_docker_image_name(instance: dict) -> str:
     image_name = instance.get("image_name", "rocm-lib")
     return image_name
 
-def get_hb_environment(config: dict, instance: dict, server_url: str | None = None) -> Environment:
+def get_hip_environment(config: dict, instance: dict, server_url: str | None = None) -> Environment:
     """
     Get the environment for a SWE-bench instance.
     If environment_class is 'docker_remote', it creates a RemoteDockerEnvironment.
@@ -336,4 +336,4 @@ class SweAgent(LitAgent):
         return await self.training_rollout_async(task, rollout_id, resources)
 
 if __name__ == "__main__":
-    Trainer(n_workers=10).fit(SweAgent(), "http://localhost:9999/")
+    Trainer(n_workers=8).fit(SweAgent(), "http://localhost:9999/")
