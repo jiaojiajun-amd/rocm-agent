@@ -8,10 +8,6 @@ import os
 import re
 from typing import TypedDict, cast
 
-from autogen_agentchat.agents import AssistantAgent
-from autogen_core.models import ModelFamily
-from autogen_ext.models.openai import OpenAIChatCompletionClient
-from autogen_ext.tools.mcp import McpWorkbench, StdioServerParams
 from eval_utils import evaluate
 
 import agentlightning as agl
@@ -39,6 +35,7 @@ from rich.live import Live
 from typing import Any, cast
 
 from minisweagent.models.qwen import QwenModel
+from minisweagent.models.litellm_model import LitellmModel
 
 import requests 
 
@@ -76,9 +73,10 @@ def get_rocm_environment(config: dict, instance: dict, server_url: str | None = 
     Otherwise, it falls back to the default local environment creation.
     """
     env_config = config.setdefault("environment", {})
-    env_class = env_config.get("environment_class", "docker")
+    env_class = env_config.get("environment_class", "docker_remote")
+    logger.info(f"env_class={env_class}")
     image_name = get_rocm_bench_docker_image_name(instance)
-    assert env_class == "docker_remote" "we only support docker_remote"
+    # assert env_class == "docker_remote" "we only support docker_remote"
 
     if RemoteDockerEnvironment is None:
         raise RuntimeError("docker_remote environment requested, but 'RemoteDockerEnvironment' could not be imported.")
@@ -106,7 +104,8 @@ def get_agent(instance: dict,
 
 
     # model = get_model(config=config.get("model", {}))
-    model = QwenModel(**model_config)
+    # model = QwenModel(**model_config)
+    model = LitellmModel(**model_config)
     agent = None
 
     env = get_rocm_environment(config, instance, server_url=server_url)
@@ -139,7 +138,9 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
     }
     config_spec = Path(builtin_config_dir / "rocm" / "config.yaml")
     config_path = get_config_path(config_spec)
+    logger.info(f"config path {config_path}")
     config = yaml.safe_load(config_path.read_text())
+    logger.info(f"config={config}")
     print(config)
 
     server_ip = "10.67.77.184"
@@ -158,11 +159,11 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
 
     logger.info("agent rollout successfully, start to get reward")
 
-    reward = evaluate(exit_status, result, container_id, instance_id, dataset_name, split, eval_server_url)
+    reward, speedup = await evaluate(exit_status, result, container_id, instance_id, dataset_name, split, eval_server_url)
     
     logger.info(f"computed reward is {reward}")
 
-    agl.emit_reward(reward)
+    agl.emit_reward(float(reward))
 
 
 

@@ -1,0 +1,15 @@
+  {
+    "repo": "rocprim",
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_sort_hpp",
+    "path_in_repo": "rocprim/include/rocprim/device/device_merge_sort.hpp",
+    "commit_id": "593fd2c6b365bff96459cb06597f25937b238d9c",
+    "problem_statement": "加速rocprim/include/rocprim/device/device_merge_sort.hpp中对应的kernel",
+    "created_at": "",
+    "version": "unknown",
+    "test_file_path": "test/rocprim/test_device_merge_sort.cpp",
+    "benchmark_file_path": "benchmark/benchmark_device_merge_sort.cpp",
+    "docker_env_path": "/opt/rocm",
+    "image_name": "rocm-lib",
+    "test_file": "test_device_merge_sort",
+    "benchmark_file": "benchmark_device_merge_sort"
+  }

@@ -292,6 +292,12 @@ class LightningStoreServer(LightningStore):
 
         @self.app.post("/enqueue_rollout", response_model=Rollout)
         async def enqueue_rollout(request: RolloutRequest):  # pyright: ignore[reportUnusedFunction]
+            # print(request)
+            logger.info(f"input={request.input}"
+                f"mode={request.mode}"
+                f"resources_id={request.resources_id}"
+                f"config={request.config}"
+                f"metadata={request.metadata}")
             return await self.enqueue_rollout(
                 input=request.input,
                 mode=request.mode,
@@ -672,6 +678,8 @@ class LightningStoreClient(LightningStore):
                 await asyncio.sleep(delay)
             try:
                 http_call = getattr(session, method)
+                # logger.info(f"bugged json is {json}")
+                
                 async with http_call(url, json=json) as resp:
                     resp.raise_for_status()
                     return await resp.json()

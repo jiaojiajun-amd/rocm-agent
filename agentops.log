@@ -1,0 +1,3 @@
+2025-11-04 08:06:54,392 - INFO - You're on the agentops free plan 🤔
+2025-11-04 08:06:54,591 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
+2025-11-04 08:06:54,606 - INFO - Session Replay for default trace: http://localhost:47967/notavailable/sessions?trace_id=b4c34413d8098fdf4059566715f010cc

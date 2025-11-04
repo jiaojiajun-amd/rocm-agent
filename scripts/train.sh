@@ -6,7 +6,7 @@ export N_GPUS=8
 export BASE_MODEL=Qwen/Qwen3-4B
 export DATA_DIR=data
 export ROLLOUT_TP_SIZE=1
-export EXPERIMENT_NAME=qwen3-4b-from-scrach-4k-10-turn-32k-prompt-len
+export EXPERIMENT_NAME=qwen3-4b-from-scrach-4k-10-turn-32k-prompt-len-dc20
 export PROJECT_NAME=rocm-agent-rl-test
 export VLLM_USE_V1=1
 export SP=1
@@ -19,7 +19,6 @@ python -m agentlightning.verl \
     data.train_files=${DATA_DIR}/train.parquet \
     data.val_files=${DATA_DIR}/test.parquet \
     actor_rollout_ref.rollout.tensor_model_parallel_size=$ROLLOUT_TP_SIZE \
-    actor_rollout_ref.actor.ulysses_sequence_parallel_size=${SP} \
     trainer.n_gpus_per_node=${N_GPUS} \
     data.train_batch_size=15 \
     actor_rollout_ref.rollout.n=8 \
@@ -57,3 +56,5 @@ python -m agentlightning.verl \
     trainer.save_freq=10 \
     trainer.test_freq=5 \
     trainer.total_epochs=50 $@
+
+    # actor_rollout_ref.actor.ulysses_sequence_parallel_size=${SP} \

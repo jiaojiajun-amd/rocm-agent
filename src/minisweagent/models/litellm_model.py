@@ -31,6 +31,7 @@ class LitellmModel:
         self.config = LitellmModelConfig(**kwargs)
         self.cost = 0.0
         self.n_calls = 0
+        self.endpoint = self.config.model_kwargs["endpoint"]
         if self.config.litellm_model_registry and Path(self.config.litellm_model_registry).is_file():
             litellm.utils.register_model(json.loads(Path(self.config.litellm_model_registry).read_text()))
 
@@ -53,7 +54,11 @@ class LitellmModel:
     def _query(self, messages: list[dict[str, str]], **kwargs):
         try:
             return litellm.completion(
-                model=self.config.model_name, messages=messages, **(self.config.model_kwargs | kwargs)
+                model=f"hosted_vllm/{self.config.model_name}",
+                messages=messages,
+                api_base = self.endpoint,
+                api_key="dummy",
+                **(self.config.model_kwargs | kwargs)
             )
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
@@ -62,7 +67,8 @@ class LitellmModel:
     def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
         response = self._query(messages, **kwargs)
         try:
-            cost = litellm.cost_calculator.completion_cost(response)
+            # cost = litellm.cost_calculator.completion_cost(response)
+            cost = 0.0
         except Exception as e:
             logger.critical(
                 f"Error calculating cost for model {self.config.model_name}: {e}. "

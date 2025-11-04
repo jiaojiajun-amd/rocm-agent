@@ -1,0 +1,19 @@
+2025-10-30 08:35:03,851 - INFO - You're on the agentops free plan 🤔
+2025-10-30 08:35:04,033 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
+2025-10-30 08:35:04,037 - INFO - Session Replay for default trace: http://localhost:49121/notavailable/sessions?trace_id=dfd6fbacc4d181a2420ab3096919e2ad
+2025-10-30 09:52:51,575 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:52:55,593 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:52:59,609 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:53:03,625 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:53:11,642 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:53:27,659 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:53:59,676 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:55:03,693 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 09:57:11,711 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 10:01:27,728 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 10:09:59,744 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 10:27:03,761 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 10:44:08,778 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 11:01:13,795 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 11:18:18,812 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2025-10-30 11:35:23,828 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.

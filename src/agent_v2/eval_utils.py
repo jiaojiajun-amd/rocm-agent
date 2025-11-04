@@ -42,8 +42,8 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
     # 检查提交状态
     if exit_status != "Submitted":
         logger.warning(f"Exit status is '{exit_status}', not 'Submitted'. Returning reward 0.0")
-        return 0.0
-    
+        return 0.0, -1.0
+        
     # 构建评估请求
     payload = {
         "instance_id": instance_id,
@@ -61,7 +61,7 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
     try:
         # 发送评估请求
         resp = requests.post(
-            f"{eval_server_url}/evaluate", 
+            f"{eval_server_url}/evaluate_v2", 
             json=payload, 
             timeout=3600  # 增加超时时间，因为包含编译和执行
         )
@@ -86,10 +86,11 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
             if "build_output" in data:
                 logger.error(f"Build output: {data['build_output'][:500]}...")  # 只记录前500字符
             
-            return 0.0
+            return 0.0, -1.0
         
         # 获取 reward
         reward = float(data.get("reward", 0.0))
+        speedup = float(data.get("speedup", -1.0))
         
         # 记录详细信息
         exit_code = data.get("exit_code", -1)
@@ -108,12 +109,12 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
             logger.debug(f"Stdout preview: {stdout_preview}...")
         
         logger.info("="*80)
-        return reward
+        return reward, speedup
     
     except requests.Timeout as e:
         logger.error(f"Request timeout after 3600 seconds: {str(e)}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
     
     except requests.HTTPError as e:
         logger.error(f"HTTP error occurred: {str(e)}")
@@ -124,24 +125,24 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
         except:
             logger.error(f"Response text: {resp.text[:500]}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
     
     except requests.ConnectionError as e:
         logger.error(f"Connection error: {str(e)}")
         logger.error(f"Could not connect to evaluation server at {eval_server_url}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
     
     except requests.RequestException as e:
         logger.error(f"Request exception occurred: {str(e)}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
     
     except (ValueError, KeyError, TypeError) as e:
         logger.error(f"Error parsing response: {str(e)}")
         logger.error(f"Response data: {resp.text[:500]}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
     
     except Exception as e:
         logger.error(f"Unexpected error in get_reward: {str(e)}")
@@ -149,5 +150,5 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         logger.error("="*80)
-        return 0.0
+        return 0.0, -1.0
 

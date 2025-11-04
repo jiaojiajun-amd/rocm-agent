@@ -33,10 +33,14 @@ import os
 from datetime import datetime
 from typing import Any, Dict, Optional, cast
 
-from calc_agent import MathProblem, calc_agent
+from rocm_agent import rocm_agent, RocmProblem
 from datasets import Dataset as HuggingFaceDataset
 
 import agentlightning as agl
+
+PROJECT_NAME = "rocm-agent-rl"
+EXPERIMENT_NAME = "qwen-3-8B-32k"
+DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
 def verl_default_config() -> Dict[str, Any]:
@@ -47,21 +51,23 @@ def verl_default_config() -> Dict[str, Any]:
         },
         "data": {
             "train_batch_size": 8,
-            "max_prompt_length": 32768,
+            "max_prompt_length": 36864,
             "max_response_length": 2048,
         },
         "actor_rollout_ref": {
             "rollout": {
                 "tensor_model_parallel_size": 1,
                 "n": 8,
-                "log_prob_micro_batch_size_per_gpu": 2,
+                "log_prob_micro_batch_size_per_gpu": 1,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
-                "gpu_memory_utilization": 0.6,
+                "gpu_memory_utilization": 0.8,
+                "free_cache_engine":False
             },
             "actor": {
                 "ppo_mini_batch_size": 8,
-                "ppo_micro_batch_size_per_gpu": 2,
+                "ppo_micro_batch_size_per_gpu": 1,
+                "ulysses_sequence_parallel_size": 4,
                 "optim": {"lr": 1e-6},
                 "use_kl_loss": False,
                 "kl_loss_coef": 0.0,
@@ -74,11 +80,12 @@ def verl_default_config() -> Dict[str, Any]:
                 },
             },
             "ref": {
-                "log_prob_micro_batch_size_per_gpu": 2,
+                "log_prob_micro_batch_size_per_gpu": 1,
+                "ulysses_sequence_parallel_size": 4,
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "Qwen/Qwen3-4B",
+                "path": "Qwen/Qwen3-8B",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },
@@ -88,12 +95,13 @@ def verl_default_config() -> Dict[str, Any]:
             "val_before_train": True,
             "critic_warmup": 0,
             "logger": ["console", "wandb"],
-            "project_name": "AgentLightning",
-            "experiment_name": "calc_x",
+            "project_name": PROJECT_NAME,
+            "experiment_name": EXPERIMENT_NAME,
+            "default_local_dir":DEFAULT_LOCAL_DIR,
             "nnodes": 1,
-            "save_freq": 64,
-            "test_freq": 32,
-            "total_epochs": 2,
+            "save_freq": 5,
+            "test_freq": 5,
+            "total_epochs": 50,
         },
     }
 
@@ -122,8 +130,8 @@ def train(
         external_store_address: Connects to an external store instead of creating a new one in memory.
     """
     # Load datasets (respect CLI file paths)
-    train_dataset = cast(agl.Dataset[MathProblem], HuggingFaceDataset.from_parquet(train_file).to_list())  # type: ignore
-    val_dataset = cast(agl.Dataset[MathProblem], HuggingFaceDataset.from_parquet(val_file).to_list())  # type: ignore
+    train_dataset = cast(agl.Dataset[RocmProblem], HuggingFaceDataset.from_parquet(train_file).to_list())  # type: ignore
+    val_dataset = cast(agl.Dataset[RocmProblem], HuggingFaceDataset.from_parquet(val_file).to_list())  # type: ignore
 
     print("First 5 rows of train dataset:")
     print(train_dataset[:5])  # type: ignore
@@ -138,8 +146,8 @@ def train(
     # CI toggle keeps everything else the same but you can tweak the lightweight bits here if desired
     if ci or ci_fast:
         # Config the experiment name and project name so that they are available to CI
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        EXPERIMENT_NAME = f"calc_x_{timestamp}"
+        # timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        EXPERIMENT_NAME = f"test1"
 
         PROJECT_NAME = "AgentLightningCI"
 
@@ -182,10 +190,11 @@ def train(
     else:
         trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=store)
 
-    trainer.fit(calc_agent, train_dataset, val_dataset=val_dataset)
+    trainer.fit(rocm_agent, train_dataset, val_dataset=val_dataset)
 
 
 def main():
+    
     parser = argparse.ArgumentParser(description="Train a math calc agent with Agent-lightning + VERL.")
     parser.add_argument("--train-file", type=str, default="data/train.parquet", help="Path to train parquet file")
     parser.add_argument("--val-file", type=str, default="data/test.parquet", help="Path to val parquet file")
@@ -195,7 +204,7 @@ def main():
     parser.add_argument(
         "--ci-fast", action="store_true", help="Limit the training loop to a single step (implies --ci)"
     )
-    parser.add_argument("--n-runners", type=int, default=10, help="Number of runners for Trainer")
+    parser.add_argument("--n-runners", type=int, default=16, help="Number of runners for Trainer")
     parser.add_argument(
         "--external-store-address",
         type=str,

@@ -6,7 +6,7 @@ docker run -it \
 	--cap-add SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	--privileged \
-    -v $HOME/rocm-agent/agent:/home/jiajjiao/rocm-agent/agent \
+    -v /mnt/raid0/jiajjiao/code/rocm-agent:/home/jiajjiao/rocm-agent \
 	--shm-size 128G \
 	-w /app \
     --name swe-verl-1 \

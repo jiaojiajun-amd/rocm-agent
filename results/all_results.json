@@ -1,0 +1,432 @@
+[
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_adjacent_difference_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.000023417936868,
+    "success": true,
+    "error": null,
+    "model_calls": 8,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_discontinuity_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9989554405246197,
+    "success": true,
+    "error": null,
+    "model_calls": 7,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_exchange_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0031370606480032,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_histogram_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9978189141458014,
+    "success": true,
+    "error": null,
+    "model_calls": 5,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_radix_rank_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9997277680648151,
+    "success": true,
+    "error": null,
+    "model_calls": 7,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_radix_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9962086936886021,
+    "success": true,
+    "error": null,
+    "model_calls": 8,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_reduce_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9948329931545926,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_run_length_decode_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9736153367669269,
+    "success": true,
+    "error": null,
+    "model_calls": 12,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_scan_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9951770617902966,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9993309091684313,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_adjacent_difference_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 9,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_adjacent_find_hpp",
+    "exit_status": "Submitted",
+    "reward": -0.2,
+    "speedup": 0.6198028072280772,
+    "success": true,
+    "error": null,
+    "model_calls": 5,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_batch_memcpy_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9880714093153964,
+    "success": true,
+    "error": null,
+    "model_calls": 13,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_binary_search_hpp",
+    "exit_status": "Submitted",
+    "reward": -0.2,
+    "speedup": 0.0,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_find_end_hpp",
+    "exit_status": "LimitsExceeded",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 15,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_find_first_of_hpp",
+    "exit_status": "Submitted",
+    "reward": -0.2,
+    "speedup": 0.7850593557181886,
+    "success": true,
+    "error": null,
+    "model_calls": 10,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_histogram_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0270952973966554,
+    "success": true,
+    "error": null,
+    "model_calls": 10,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_memory_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 12,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 10,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_inplace_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0063571505254796,
+    "success": true,
+    "error": null,
+    "model_calls": 15,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0114753684439548,
+    "success": true,
+    "error": null,
+    "model_calls": 11,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_nth_element_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0264270924638994,
+    "success": true,
+    "error": null,
+    "model_calls": 14,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_partial_sort_hpp",
+    "exit_status": "LimitsExceeded",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 15,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_partial_sort_copy_hpp",
+    "exit_status": "LimitsExceeded",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 15,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_partition_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 11,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_radix_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0397325031361426,
+    "success": true,
+    "error": null,
+    "model_calls": 11,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_reduce_hpp",
+    "exit_status": "Submitted",
+    "reward": -0.2,
+    "speedup": 0.7304874311909381,
+    "success": true,
+    "error": null,
+    "model_calls": 7,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_reduce_by_key_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 9,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_run_length_encode_hpp",
+    "exit_status": "Submitted",
+    "reward": 2.0,
+    "speedup": 1.4081727594093443,
+    "success": true,
+    "error": null,
+    "model_calls": 14,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 13,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_by_key_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 15,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_search_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.997392947246863,
+    "success": true,
+    "error": null,
+    "model_calls": 8,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_search_n_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0289010809718746,
+    "success": true,
+    "error": null,
+    "model_calls": 11,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_radix_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0182789621430806,
+    "success": true,
+    "error": null,
+    "model_calls": 7,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_reduce_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0210032607669708,
+    "success": true,
+    "error": null,
+    "model_calls": 12,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_scan_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 11,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_select_hpp",
+    "exit_status": "Submitted",
+    "reward": 1.5,
+    "speedup": 1.119791647145715,
+    "success": true,
+    "error": null,
+    "model_calls": 6,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_device_device_transform_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 7,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_exchange_hpp",
+    "exit_status": "Submitted",
+    "reward": -0.2,
+    "speedup": 0.7939608856283281,
+    "success": true,
+    "error": null,
+    "model_calls": 12,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_reduce_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.0,
+    "speedup": -1.0,
+    "success": true,
+    "error": null,
+    "model_calls": 9,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_scan_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0023885151612286,
+    "success": true,
+    "error": null,
+    "model_calls": 8,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_sort_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.3,
+    "speedup": 0.9992408713589881,
+    "success": true,
+    "error": null,
+    "model_calls": 13,
+    "model_cost": 0.0
+  },
+  {
+    "instance_id": "rocprim_rocprim_include_rocprim_block_block_load_store_hpp",
+    "exit_status": "Submitted",
+    "reward": 0.7,
+    "speedup": 1.0055917382783273,
+    "success": true,
+    "error": null,
+    "model_calls": 14,
+    "model_cost": 0.0
+  }
+]
