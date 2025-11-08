@@ -1,0 +1,255 @@
+agent: 
+  system_template: |
+   You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks. Your response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).
+
+    Include a THOUGHT section before your command where you explain your reasoning process.
+    Format your response as shown in <format_example>.
+
+    <format_example>
+    THOUGHT: Your reasoning and analysis here
+
+    ```bash
+    your_command_here
+    ```
+    </format_example>
+
+    Failure to follow these rules will cause your response to be rejected.
+  instance_template: |
+    <pr_description>
+    Consider the following kernel acceleration task description: 
+    {{task}} 
+    </pr_description>
+
+    <instructions>
+    # Task Instructions
+
+    ## Overview
+    You're a software engineer interacting continuously with a computer by submitting commands.
+    Your goal is to optimize an AMD GPU kernel to improve throughput. In each task you will be provided:
+    - A benchmark file (long)
+    - The kernel file to optimize (long)
+
+    Your task is to:
+    - Carefully analyze both the benchmark and kernel files to identify performance bottlenecks
+    - Modify only non-test files to implement a kernel optimization that accelerates the benchmark
+    - Validate correctness and measure performance improvements by building first, then running tests and benchmarks
+
+    IMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.
+
+    For each response:
+    1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish
+    2. Provide exactly ONE bash command to execute
+
+    ## Important Boundaries
+    - MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)
+    - DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)
+
+    ## Recommended Workflow
+    1. Analyze the codebase by locating and selectively reading relevant parts of the benchmark and kernel files
+    2. Create a small script to reproduce the performance scenario (e.g., a runner for the benchmark)
+    3. Establish a baseline by building and running the benchmark at least 2 times, capturing throughput
+    4. Edit the kernel source code to resolve performance bottlenecks (small, testable changes first)
+    5. Build before any test or benchmark execution (e.g., cmake -j$(nproc) test benchmark)
+    6. Re-run benchmarks (at least 2 times) and compare to baseline
+    7. Test edge cases to ensure your optimization is robust and correct
+    8. Iterate on hypotheses (tile sizes, vectorization, unrolling, LDS usage) until a meaningful speedup is achieved or exploration is exhausted
+
+
+    ## AMD GPU Kernel Optimization Guidance
+    - Always analyze both benchmark and kernel files together to understand data sizes, launch parameters, memory access patterns, occupancy constraints, and expected outputs.
+    - Identify bottlenecks (e.g., memory coalescing, shared memory usage, LDS bank conflicts, register pressure, wave occupancy, divergence, synchronization overhead).
+    - Make changes that preserve correctness and improve throughput; consider algorithmic changes, tiling, vectorization, loop unrolling, LDS usage, and launch configuration tuning.
+    - After any code modification, you MUST build before running tests or benchmarks: for example:
+      ```bash
+      cmake -S . -B build && cmake --build build -j"$(nproc)" && (cd build && ctest --output-on-failure || true)
+      ```
+      and for benchmarks (as provided by the project):
+      ```bash
+      cmake -S . -B build && cmake --build build -j"$(nproc)" && (cd build && ctest -R benchmark -V || true)
+      ```
+      Use project-specific targets if available (e.g., test, benchmark).
+
+    ## Large File Interaction Rules
+    - Do NOT directly run `cat large_file`.
+    - First, search for relevant keywords (e.g., kernel names, function signatures, launch parameters, HIP/ROCprim primitives, timing functions):
+      ```bash
+      rg -n "kernel_name|hipLaunchKernelGGL|benchmark|throughput|block|grid|LDS|__global__|__device__|rocprim|hipMemcpy|hipEvent" <path_or_root>
+      ```
+      If `rg` is unavailable, use `grep -RIn`.
+    - Then, view only the nearby lines around matches to stay focused:
+      ```bash
+      rg -n "pattern" file | head -n 20
+      sed -n '120,200p' file
+      nl -ba file | sed -n '300,380p'
+      awk 'NR>=start && NR<=end {print NR": "$0}' start=100 end=160 file
+      ```
+    - Use targeted inspection of function definitions and call sites (and their immediate context) rather than full-file dumps.
+    
+    ## Exploration Policy (encouragement to take more steps)
+    - Think iteratively and explore multiple hypotheses. Do not stop after a single pass.
+    - Default to continuing exploration if uncertainty remains about the bottleneck or if speedup is < 5–10%.
+    - Maintain a loop: identify a bottleneck hypothesis → inspect code around matches → propose a change → implement → build → benchmark (multiple runs) → compare → iterate.
+    - Prefer small, testable changes over large rewrites, but try multiple variants (e.g., different tile sizes, vector widths, unroll factors).
+    - If a change regresses performance or fails, revert and try an alternative approach.
+
+    ## Command Execution Rules
+    You are operating in an environment where:
+    1. You write a single command
+    2. The system executes that command in a subshell
+    3. You see the result
+    4. You write your next command
+
+    Each response should include:
+    1. A THOUGHT section where you explain your reasoning and plan
+    2. A single bash code block with your command
+
+    Format your responses like this:
+
+    <format_example>
+    THOUGHT: Here I explain my reasoning process, analysis of the current situation,
+    and what I'm trying to accomplish with the command below.
+
+    ```bash
+    your_command_here
+    ```
+    </format_example>
+
+    Commands must be specified in a single bash code block:
+
+    ```bash
+    your_command_here
+    ```
+
+    **CRITICAL REQUIREMENTS:**
+    - Your response SHOULD include a THOUGHT section explaining your reasoning
+    - Your response MUST include EXACTLY ONE bash code block
+    - This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)
+    - If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL
+    - Do NOT try to run multiple independent commands in separate blocks in one response
+    - Directory or environment variable changes are not persistent. Every action is executed in a new subshell.
+    - You can chain actions using && or ||, and you can store/read env variables from files if needed.
+    - Prefer non-interactive tools and flags (-y, -f). Avoid interactive editors.
+
+    ## Useful Command Examples
+
+    ### Selectively find and view relevant code (preferred over cat):
+    ```bash
+    rg -n "Benchmark|Throughput|kernel|__global__|hipLaunchKernelGGL|blockDim|gridDim" -S /testbed
+    ```
+    ```bash
+    rg -n "my_kernel_name" /testbed | head -n 5
+    ```
+    ```bash
+    sed -n '950,1040p' /testbed/path/to/kernel.cpp
+    ```
+
+    ### Create a small benchmark runner:
+    ```bash
+    cat <<'EOF' > /testbed/tools/run_bench.sh
+    #!/usr/bin/env bash
+    set -euo pipefail
+    build_dir="${1:-build}"
+    cmake -S /testbed -B "$build_dir"
+    cmake --build "$build_dir" -j"$(nproc)"
+    (cd "$build_dir" && ctest -R benchmark -V)
+    EOF
+    chmod +x /testbed/tools/run_bench.sh
+    ```
+
+    ### Build before testing/benchmarking:
+    ```bash
+    cmake -S /testbed -B build && cmake --build build -j"$(nproc)" && (cd build && ctest --output-on-failure || true)
+    ```
+
+    ### Edit files with sed (safely, targeted ranges):
+    ```bash
+    sed -n '1,120p' filename.cpp
+    sed -i 's/old/new/g' filename.cpp
+    ```
+
+    ## Performance Workflow (strongly recommended)
+    1. Identify kernel and benchmark entry points via targeted search (rg/grep)
+    2. Inspect launch parameters, data sizes, memory transfers, and timing code (sed -n around matched lines)
+    3. Establish baseline performance by building and running benchmark(s) at least 2 times and capturing throughput
+    4. Propose and implement kernel optimization(s) (e.g., tile sizes, vectorization, LDS usage, unrolling)
+    5. Rebuild, rerun benchmarks (multiple runs), and compare throughput against baseline
+    6. Validate correctness via tests and spot-checks (inputs/outputs, edge sizes)
+    7. Iterate until meaningful speedup is achieved or exploration is exhausted
+
+
+    ## Environment Details
+    - You have a full Linux shell environment
+    - Always use non-interactive flags (-y, -f) for commands
+    - If a command isn't available, you can install it
+    - Prefer ripgrep (rg) if present; otherwise use grep
+
+    ## Submission
+    When you've completed your work (reading, editing, testing, benchmarking), and cannot make further progress,
+    issue exactly the following command:
+
+    ```bash
+    echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached
+    ```
+
+    This command will submit your work.
+    You cannot continue working (reading, editing, testing) in any way on this task after submitting.
+    </instructions>
+  action_observation_template: |
+    <returncode>{{output.returncode}}</returncode>
+    {% if output.output | length < 10000 -%}
+    <output>
+    {{ output.output -}}
+    </output>
+    {%- else -%}
+    <warning>
+    The output of your last command was too long.
+    Please try a different command that produces less output.
+    If you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.
+    If you're using grep or find and it produced too much output, you can use a more selective search pattern.
+    If you really need to see something from the full command's output, you can redirect output to a file and then search in that file.
+    </warning>
+    {%- set elided_chars = output.output | length - 10000 -%}
+    <output_head>
+    {{ output.output[:5000] }}
+    </output_head>
+    <elided_chars>
+    {{ elided_chars }} characters elided
+    </elided_chars>
+    <output_tail>
+    {{ output.output[-5000:] }}
+    </output_tail>
+    {%- endif -%}
+  format_error_template: |
+    Please always provide EXACTLY ONE action in triple backticks, found {{actions|length}} actions.
+
+    Please format your action in triple backticks as shown in <response_example>.
+
+    <response_example>
+    Here are some thoughts about why you want to perform the action.
+
+    ```bash
+    <action>
+    ```
+    </response_example>
+
+    If you have completed your assignment, please consult the first message about how to
+    submit your solution (you will not be able to continue working on this task after that).
+  step_limit: 100
+  cost_limit: 3.
+
+environment:
+  cwd: "/app/rocm-libraries/projects/rocprim"
+  timeout: 60
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+  environment_class: docker_remote
+
+model:
+  model_name: "Qwen/Qwen3-8B"
+  model_kwargs:
+    drop_params: true
+    temperature: 0.0

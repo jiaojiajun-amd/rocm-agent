@@ -112,6 +112,7 @@ class LiteLLMAMDModel:
                 messages=messages,
                 api_base=self.api_base_full,
                 api_key=self.config.api_key,
+                resoning_effort="high",
                 extra_headers={
                     'Ocp-Apim-Subscription-Key': self.config.api_key
                 },

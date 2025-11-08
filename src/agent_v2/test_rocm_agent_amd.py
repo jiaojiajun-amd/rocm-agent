@@ -25,7 +25,7 @@ from minisweagent.config import builtin_config_dir, get_config_path
 from minisweagent.environments.docker_remote import RemoteDockerEnvironment
 from minisweagent.models.litellm_amd_model import LiteLLMAMDModel
 from minisweagent.utils.log import add_file_handler, logger
-from eval_utils import evaluate
+from eval_utils import evaluate,evaluate_info
 
 app = typer.Typer()
 console = Console()
@@ -145,6 +145,86 @@ async def run_single_task(
         }
 
 
+from typing import Any, Dict
+
+async def run_single_task_with_evaluation_info(
+    instance: dict,
+    model: LiteLLMAMDModel,
+    config: dict,
+    docker_server_url: str,
+    eval_server_url: str,
+) -> Dict[str, Any]:
+    """Run a single task and return results."""
+    instance_id = instance["instance_id"]
+    logger.info(f"Running task: {instance_id}")
+
+    try:
+        agent = get_agent(instance, config, docker_server_url, model)
+        problem = instance["problem_statement"]
+
+        # Run the agent
+        logger.info(f"Starting agent execution for {instance_id}")
+        exit_status, result = agent.run(problem)
+        container_id = agent.env.container_id
+
+        logger.info(f"Agent execution completed for {instance_id}, exit_status: {exit_status}")
+
+        # Evaluate
+        dataset_name = instance.get("dataset_name", "SWE-bench/SWE-bench_Lite")
+        split = instance.get("split", "test")
+
+        logger.info(f"Starting evaluation for {instance_id}")
+        reward, speedup, evaluation_info = await evaluate_info(
+            exit_status,
+            result,
+            container_id,
+            instance_id,
+            dataset_name,
+            split,
+            eval_server_url,
+        )
+
+        logger.info(f"Task {instance_id} completed with reward: {reward}")
+
+        # Get model statistics
+        model_stats = model.get_template_vars()
+
+        return {
+            "instance_id": instance_id,
+            "exit_status": exit_status,
+            "reward": float(reward),
+            "speedup": float(speedup),
+            "success": True,
+            "error": None,
+            "model_calls": model_stats.get("n_model_calls", 0),
+            "model_cost": model_stats.get("model_cost", 0.0),
+            # 新增：详细评估信息
+            "evaluation_info": evaluation_info,
+        }
+
+    except Exception as e:
+        logger.error(f"Error running task {instance_id}: {e}")
+        import traceback
+        traceback.print_exc()
+
+        return {
+            "instance_id": instance_id,
+            "exit_status": "error",
+            "reward": 0.0,
+            "success": False,
+            "error": str(e),
+            "model_calls": 0,
+            "model_cost": 0.0,
+            # 保持结构一致，错误情况下也返回 evaluation_info 的占位
+            "evaluation_info": {
+                "meta": {
+                    "success": False,
+                    "error": str(e),
+                }
+            },
+        }
+
+
 async def run_all_tasks(
     dataset_path: Path,
     model: LiteLLMAMDModel,
@@ -190,7 +270,7 @@ async def run_all_tasks(
                 description=f"[cyan]Task {idx+1}/{len(dataset)}: {instance_id}[/cyan]"
             )
             model.n_calls = 0 
-            result = await run_single_task(
+            result = await run_single_task_with_evaluation_info(
                 instance,
                 model,
                 config,
@@ -433,7 +513,7 @@ def test_all(
     if config_file:
         config_path = config_file
     else:
-        config_spec = Path(builtin_config_dir / "rocm" / "config_amd.yaml")
+        config_spec = Path(builtin_config_dir / "rocm" / "config_amd_v1.yaml")
         config_path = get_config_path(config_spec)
     
     config = yaml.safe_load(config_path.read_text())

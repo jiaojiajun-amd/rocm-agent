@@ -39,7 +39,7 @@ from datasets import Dataset as HuggingFaceDataset
 import agentlightning as agl
 
 PROJECT_NAME = "rocm-agent-rl"
-EXPERIMENT_NAME = "qwen-3-8B-32k"
+EXPERIMENT_NAME = "qwen-3-8B-32k_rocprim_v4_eval_v3"
 DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
