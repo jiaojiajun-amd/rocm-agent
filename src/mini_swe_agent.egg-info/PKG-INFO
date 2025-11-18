@@ -49,6 +49,8 @@ Requires-Dist: platformdirs
 Requires-Dist: textual
 Requires-Dist: prompt_toolkit
 Requires-Dist: openai!=1.100.0,!=1.100.1
+Requires-Dist: aiohttp>=3.12.15
+Requires-Dist: numpy>=2.2.6
 Provides-Extra: full
 Requires-Dist: mini-swe-agent[dev]; extra == "full"
 Requires-Dist: swe-rex>=1.4.0; extra == "full"

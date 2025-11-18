@@ -22,11 +22,14 @@ src/minisweagent/config/github_issue.yaml
 src/minisweagent/config/mini.tcss
 src/minisweagent/config/mini.yaml
 src/minisweagent/config/mini_no_temp.yaml
+src/minisweagent/config/__pycache__/__init__.cpython-312.pyc
 src/minisweagent/config/extra/__init__.py
 src/minisweagent/config/extra/swebench.yaml
 src/minisweagent/config/extra/swebench_remote.yaml
 src/minisweagent/config/extra/swebench_roulette.yaml
 src/minisweagent/config/rocm/config.yaml
+src/minisweagent/config/rocm/config_amd.yaml
+src/minisweagent/config/rocm/config_amd_v1.yaml
 src/minisweagent/environments/__init__.py
 src/minisweagent/environments/docker.py
 src/minisweagent/environments/docker_remote.py
@@ -37,6 +40,7 @@ src/minisweagent/environments/extra/bubblewrap.py
 src/minisweagent/environments/extra/swerex_docker.py
 src/minisweagent/models/__init__.py
 src/minisweagent/models/anthropic.py
+src/minisweagent/models/litellm_amd_model.py
 src/minisweagent/models/litellm_model.py
 src/minisweagent/models/openrouter_model.py
 src/minisweagent/models/portkey_model.py

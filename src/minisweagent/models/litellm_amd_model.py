@@ -33,6 +33,7 @@ class LitellmAMDModelConfig:
     max_tokens: int = 8000
     model_kwargs: dict[str, Any] = field(default_factory=dict)
     litellm_model_registry: Path | str | None = os.getenv("LITELLM_MODEL_REGISTRY_PATH")
+    top_k:int = 40
 
 
 class LiteLLMAMDModel:
@@ -107,17 +108,28 @@ class LiteLLMAMDModel:
         merged_kwargs.update(kwargs)
         
         try:
-            response = litellm.completion(
+            if self.config.model_name in ["gpt-5", "claude-4"]:
+                response = litellm.completion(
+                    model=f"openai/{self.config.model_name}",
+                    messages=messages,
+                    api_base=self.api_base_full,
+                    api_key=self.config.api_key,
+                    resoning_effort="high",
+                    extra_headers={
+                        'Ocp-Apim-Subscription-Key': self.config.api_key
+                    },
+                    **merged_kwargs
+                )
+            else:
+                response = litellm.completion(
                 model=f"openai/{self.config.model_name}",
                 messages=messages,
-                api_base=self.api_base_full,
-                api_key=self.config.api_key,
-                resoning_effort="high",
-                extra_headers={
-                    'Ocp-Apim-Subscription-Key': self.config.api_key
-                },
-                **merged_kwargs
+                api_base = "http://localhost:30000/v1",
+                api_key="dummy",
+                timeout= 8000,
+                **(self.config.model_kwargs | kwargs)
             )
+
             return response
             
         except litellm.exceptions.AuthenticationError as e:

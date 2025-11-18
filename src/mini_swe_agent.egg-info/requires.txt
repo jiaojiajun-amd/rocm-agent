@@ -10,6 +10,8 @@ platformdirs
 textual
 prompt_toolkit
 openai!=1.100.0,!=1.100.1
+aiohttp>=3.12.15
+numpy>=2.2.6
 
 [dev]
 datasets

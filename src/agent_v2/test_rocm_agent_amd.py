@@ -20,6 +20,8 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
 from rich.table import Table
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from minisweagent.agents.default import DefaultAgent
 from minisweagent.config import builtin_config_dir, get_config_path
 from minisweagent.environments.docker_remote import RemoteDockerEnvironment
@@ -387,6 +389,7 @@ def test_single(
     
     # Initialize model
     console.print(f"[cyan]Initializing {model_name} model...[/cyan]")
+
     model = LiteLLMAMDModel(
         model_name=model_name,
         api_key=api_key,
@@ -526,6 +529,7 @@ def test_all(
         api_key=api_key,
         temperature=temperature,
         max_tokens=max_tokens,
+        top_k=40,
     )
     
     console.print(f"[bold blue]Testing dataset with {model_name}[/bold blue]")
@@ -577,6 +581,268 @@ def test_all(
     console.print(f"\n[bold green]✓ All results saved to {output_file}[/bold green]")
 
 
+@app.command("test_all_multi_thread")
+def test_all_multi_thread(
+    dataset_file: Path = typer.Option(
+        ...,
+        "--dataset",
+        "-d",
+        help="Path to JSON file containing all task instances"
+    ),
+    api_key: str = typer.Option(
+        "c1f7f3ee59064fc0a5fad8c2586f1bd9",
+        "--api-key",
+        help="AMD API subscription key"
+    ),
+    model_name: str = typer.Option(
+        "gpt-5",
+        "--model",
+        "-m",
+        help="Model name (e.g., gpt-5)"
+    ),
+    docker_server: str = typer.Option(
+        "10.67.77.184:9527",
+        "--docker-server",
+        help="Docker server address (IP:PORT)"
+    ),
+    eval_server: str = typer.Option(
+        "10.67.77.184:9528",
+        "--eval-server",
+        help="Evaluation server address (IP:PORT)"
+    ),
+    config_file: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Custom config file (defaults to builtin rocm config)"
+    ),
+    output_file: Path = typer.Option(
+        "results.json",
+        "--output",
+        "-o",
+        help="Output file for results (JSON)"
+    ),
+    max_tasks: Optional[int] = typer.Option(
+        None,
+        "--max-tasks",
+        help="Maximum number of tasks to run (for testing)"
+    ),
+    log_file: Optional[Path] = typer.Option(
+        None,
+        "--log-file",
+        help="Log file path"
+    ),
+    temperature: float = typer.Option(
+        1.0,
+        "--temperature",
+        "-t",
+        help="Sampling temperature"
+    ),
+    max_tokens: int = typer.Option(
+        8000,
+        "--max-tokens",
+        help="Maximum tokens to generate"
+    ),
+    workers: int = typer.Option(
+        max(1, os.cpu_count() or 4),
+        "--workers",
+        "-w",
+        help="Number of threads for parallel task execution"
+    ),
+):
+    """
+    测试数据集中的所有 ROCm 任务，使用多线程并发执行（每线程独立模型实例）。
+    """
+
+    # Setup logging
+    if log_file:
+        add_file_handler(logger, log_file)
+        console.print(f"[cyan]Logging to {log_file}[/cyan]")
+
+    # Load config
+    if config_file:
+        config_path = config_file
+    else:
+        config_spec = Path(builtin_config_dir / "rocm" / "config_amd_v1.yaml")
+        config_path = get_config_path(config_spec)
+
+    config = yaml.safe_load(config_path.read_text())
+    logger.info(f"Loaded config from {config_path}")
+
+    console.print(f"[bold blue]Testing dataset with {model_name} (multi-thread)[/bold blue]")
+    console.print(f"Dataset: {dataset_file}")
+    if max_tasks:
+        console.print(f"Max tasks: {max_tasks}")
+    console.print(f"Output: {output_file}")
+    console.print(f"Workers: {workers}\n")
+
+    docker_server_url = f"http://{docker_server}"
+    eval_server_url = f"http://{eval_server}"
+
+    # Load dataset (必须是 list[instance])
+    with open(dataset_file, "r") as f:
+        dataset = json.load(f)
+    if not isinstance(dataset, list):
+        raise ValueError("Dataset must be a JSON array of task instances")
+    if max_tasks:
+        dataset = dataset[:max_tasks]
+
+    total = len(dataset)
+    logger.info(f"Loaded {total} tasks from {dataset_file}")
+
+    # 子线程 worker：每个线程里创建自己的模型实例，并执行单个任务
+    def worker(instance: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            # 每线程独立模型，避免线程安全问题
+            model = LiteLLMAMDModel(
+                model_name=model_name,
+                api_key=api_key,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_k=40,
+            )
+            # 若需要重置统计字段，可在此设置
+            # model.n_calls = 0
+
+            # 调用异步单任务函数
+            return asyncio.run(
+                run_single_task_with_evaluation_info(
+                    instance=instance,
+                    model=model,
+                    config=config,
+                    docker_server_url=docker_server_url,
+                    eval_server_url=eval_server_url,
+                )
+            )
+        except Exception as e:
+            logger.exception(f"Worker error for instance {instance.get('instance_id')}: {e}")
+            return {
+                "instance_id": instance.get("instance_id"),
+                "exit_status": "error",
+                "reward": 0.0,
+                "success": False,
+                "error": str(e),
+                "model_calls": 0,
+                "model_cost": 0.0,
+                "evaluation_info": {
+                    "meta": {
+                        "success": False,
+                        "error": str(e),
+                    }
+                },
+            }
+
+    results: List[Dict[str, Any]] = []
+    instance_ids: List[str] = [ins.get("instance_id", f"task_{i}") for i, ins in enumerate(dataset)]
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeRemainingColumn(),
+        console=console,
+    ) as progress:
+        ptask = progress.add_task(f"Running {total} tasks in parallel...", total=total)
+
+        # 提交任务
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_idx = {executor.submit(worker, ins): i for i, ins in enumerate(dataset)}
+
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                ins_id = instance_ids[idx]
+                try:
+                    res = future.result()
+                except Exception as e:
+                    logger.exception(f"Unhandled exception in future for {ins_id}: {e}")
+                    res = {
+                        "instance_id": ins_id,
+                        "exit_status": "error",
+                        "reward": 0.0,
+                        "success": False,
+                        "error": str(e),
+                        "model_calls": 0,
+                        "model_cost": 0.0,
+                        "evaluation_info": {
+                            "meta": {
+                                "success": False,
+                                "error": str(e),
+                            }
+                        },
+                    }
+
+                results.append(res)
+                # 更新进度描述
+                progress.update(
+                    ptask,
+                    description=f"[cyan]Completed {len(results)}/{total} (last: {ins_id})[/cyan]"
+                )
+                progress.advance(ptask)
+
+                # 保存中间结果（可选）
+                if output_file:
+                    try:
+                        with open(output_file, "w") as f:
+                            json.dump(results, f, indent=2)
+                        logger.info(f"Saved intermediate results to {output_file} ({len(results)}/{total})")
+                    except Exception as e:
+                        logger.warning(f"Failed to save intermediate results: {e}")
+
+    # 汇总统计
+    successful = sum(1 for r in results if r.get("success"))
+    failed = len(results) - successful
+    total_reward = sum(r.get("reward", 0.0) for r in results)
+    avg_reward = (total_reward / len(results)) if results else 0.0
+    total_calls = sum(r.get("model_calls", 0) for r in results)
+    total_cost = sum(r.get("model_cost", 0.0) for r in results)
+
+    # 显示结果表
+    table = Table(title="Results Summary (Multi-thread)", show_header=True, header_style="bold magenta")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    table.add_row("Total Tasks", str(len(results)))
+    table.add_row("Successful", str(successful))
+    table.add_row("Failed", str(failed))
+    table.add_row("Success Rate", f"{(successful/len(results)*100):.2f}%")
+    table.add_row("Average Reward", f"{avg_reward:.4f}")
+    table.add_row("Total Reward", f"{total_reward:.4f}")
+    table.add_row("Total Model Calls", str(total_calls))
+    table.add_row("Total Cost", f"${total_cost:.4f}")
+
+    console.print("\n")
+    console.print(table)
+
+    # 保存最终带元数据的结果
+    final_output = {
+        "metadata": {
+            "mode": "multi-thread",
+            "model_name": model_name,
+            "dataset_file": str(dataset_file),
+            "total_tasks": len(results),
+            "config_file": str(config_path),
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "workers": workers,
+        },
+        "results": results,
+        "summary": {
+            "successful": successful,
+            "failed": failed,
+            "average_reward": avg_reward,
+            "total_reward": total_reward,
+            "total_model_calls": total_calls,
+            "total_cost": total_cost,
+        },
+    }
+
+    try:
+        with open(output_file, "w") as f:
+            json.dump(final_output, f, indent=2)
+        console.print(f"\n[bold green]✓ All results saved to {output_file}[/bold green]")
+    except Exception as e:
+        logger.error(f"Failed to write final results to {output_file}: {e}")
+
 @app.command()
 def test_connection(
     api_key: str = typer.Option(
@@ -608,6 +874,7 @@ def test_connection(
                 model_name=model_name,
                 api_key=api_key,
                 temperature=temperature,
+                top_k=40,
             )
         
         console.print("[green]✓ Model initialized successfully[/green]")
