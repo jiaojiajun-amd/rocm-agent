@@ -20,8 +20,8 @@ python test_rocm_agent_amd.py test_all_multi_thread \
     --model "zai-org/GLM-4.6" \
     --docker-server "10.67.77.184:9527" \
     --eval-server "10.67.77.184:9528" \
-    --output /home/jiajjiao/rocm-agent/results/all_results_rocprim_v4_glm46_config_v1.json \
-    --config /home/jiajjiao/rocm-agent/src/minisweagent/config/rocm/config_amd_v1.yaml \
+    --output /home/jiajjiao/rocm-agent/results/all_results_rocprim_v4_glm46_w_mem.json \
+    --config /home/jiajjiao/rocm-agent/src/minisweagent/config/rocm/config_amd.yaml \
     --workers 16
 
 

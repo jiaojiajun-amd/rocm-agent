@@ -75,7 +75,7 @@ class LiteLLMAMDModel:
 
     @retry(
         stop=stop_after_attempt(10),
-        wait=wait_exponential(multiplier=1, min=4, max=60),
+        wait=wait_exponential(multiplier=1, min=60, max=512),
         before_sleep=before_sleep_log(logger, logging.WARNING),
         retry=retry_if_not_exception_type(
             (
@@ -108,13 +108,13 @@ class LiteLLMAMDModel:
         merged_kwargs.update(kwargs)
         
         try:
-            if self.config.model_name in ["gpt-5", "claude-4"]:
+            if self.config.model_name in ["gpt-5", "claude-4", "o3","claude-4.5"]:
                 response = litellm.completion(
-                    model=f"openai/{self.config.model_name}",
+                    model=f"hosted_vllm/{self.config.model_name}",
                     messages=messages,
                     api_base=self.api_base_full,
                     api_key=self.config.api_key,
-                    resoning_effort="high",
+                    reasoning_effort="high",
                     extra_headers={
                         'Ocp-Apim-Subscription-Key': self.config.api_key
                     },
@@ -122,7 +122,7 @@ class LiteLLMAMDModel:
                 )
             else:
                 response = litellm.completion(
-                model=f"openai/{self.config.model_name}",
+                model=f"hosted_vllm/{self.config.model_name}",
                 messages=messages,
                 api_base = "http://localhost:30000/v1",
                 api_key="dummy",

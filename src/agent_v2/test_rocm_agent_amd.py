@@ -70,12 +70,59 @@ def get_agent(
 ) -> DefaultAgent:
     """Create an agent for the given instance."""
     env = get_rocm_environment(config, instance, server_url)
-    agent = DefaultAgent(
-        model=model,
-        env=env,
-        **config.get("agent", {}),
-    )
+    use_which_agent = config.get("use_which_agent", "rocm")
+    if use_which_agent == "rocm":
+        agent = DefaultAgent(
+            model=model,
+            env=env,
+            **config.get("agent", {}),
+        )
+    else:
+        from minisweagent.agents.mini import MiniAgent
+        agent = MiniAgent(
+            model = model,
+            env=env,
+            **config.get("agent", {})
+        )
+        
     return agent
+
+
+def get_git_diff(env, instance_id: str) -> Optional[str]:
+    """
+    Get git diff from the environment.
+    Tries multiple strategies:
+    1. git diff --cached (staged changes)
+    2. git diff (unstaged changes)
+    3. git diff HEAD (all changes vs HEAD)
+    """
+    try:
+        logger.info(f"Getting git diff for {instance_id}")
+        
+        # First try to get cached (staged) changes
+        diff_result = env.execute("git diff --cached")
+        if diff_result["returncode"] == 0 and diff_result["output"].strip():
+            logger.info(f"Git diff (cached) obtained successfully for {instance_id}")
+            return diff_result["output"]
+        
+        # If no cached changes, try regular diff
+        diff_result = env.execute("git diff")
+        if diff_result["returncode"] == 0 and diff_result["output"].strip():
+            logger.info(f"Git diff obtained successfully for {instance_id}")
+            return diff_result["output"]
+        
+        # Try diff against HEAD to capture all changes
+        diff_result = env.execute("git diff HEAD")
+        if diff_result["returncode"] == 0 and diff_result["output"].strip():
+            logger.info(f"Git diff HEAD obtained successfully for {instance_id}")
+            return diff_result["output"]
+        
+        logger.warning(f"No git changes found for {instance_id}")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error getting git diff for {instance_id}: {e}")
+        return None
 
 
 async def run_single_task(
@@ -99,6 +146,9 @@ async def run_single_task(
         container_id = agent.env.container_id
         
         logger.info(f"Agent execution completed for {instance_id}, exit_status: {exit_status}")
+        
+        # Get git diff
+        git_diff = get_git_diff(agent.env, instance_id)
         
         # Evaluate
         dataset_name = instance.get("dataset_name", "SWE-bench/SWE-bench_Lite")
@@ -129,6 +179,7 @@ async def run_single_task(
             "error": None,
             "model_calls": model_stats.get("n_model_calls", 0),
             "model_cost": model_stats.get("model_cost", 0.0),
+            "git_diff": git_diff,
         }
         
     except Exception as e:
@@ -144,6 +195,7 @@ async def run_single_task(
             "error": str(e),
             "model_calls": 0,
             "model_cost": 0.0,
+            "git_diff": None,
         }
 
 
@@ -170,6 +222,9 @@ async def run_single_task_with_evaluation_info(
         container_id = agent.env.container_id
 
         logger.info(f"Agent execution completed for {instance_id}, exit_status: {exit_status}")
+
+        # Get git diff
+        git_diff = get_git_diff(agent.env, instance_id)
 
         # Evaluate
         dataset_name = instance.get("dataset_name", "SWE-bench/SWE-bench_Lite")
@@ -200,6 +255,7 @@ async def run_single_task_with_evaluation_info(
             "error": None,
             "model_calls": model_stats.get("n_model_calls", 0),
             "model_cost": model_stats.get("model_cost", 0.0),
+            "git_diff": git_diff,
             # 新增：详细评估信息
             "evaluation_info": evaluation_info,
         }
@@ -217,6 +273,7 @@ async def run_single_task_with_evaluation_info(
             "error": str(e),
             "model_calls": 0,
             "model_cost": 0.0,
+            "git_diff": None,
             # 保持结构一致，错误情况下也返回 evaluation_info 的占位
             "evaluation_info": {
                 "meta": {
@@ -435,6 +492,13 @@ def test_single(
     
     console.print(result_table)
     
+    # Display git diff if available
+    if result.get('git_diff'):
+        console.print("\n[bold cyan]═══ Git Diff ═══[/bold cyan]")
+        console.print(result['git_diff'])
+    else:
+        console.print("\n[yellow]No git diff available[/yellow]")
+    
     # Save results
     if output_file:
         with open(output_file, 'w') as f:
@@ -649,6 +713,11 @@ def test_all_multi_thread(
         "-w",
         help="Number of threads for parallel task execution"
     ),
+    use_which_agent: str = typer.Option(
+        "rocm",
+        "--use-rocm-agent",
+        help="which agent"
+    )
 ):
     """
     测试数据集中的所有 ROCm 任务，使用多线程并发执行（每线程独立模型实例）。
@@ -667,6 +736,7 @@ def test_all_multi_thread(
         config_path = get_config_path(config_spec)
 
     config = yaml.safe_load(config_path.read_text())
+    config["use_which_agent"] = use_which_agent
     logger.info(f"Loaded config from {config_path}")
 
     console.print(f"[bold blue]Testing dataset with {model_name} (multi-thread)[/bold blue]")
@@ -724,6 +794,7 @@ def test_all_multi_thread(
                 "error": str(e),
                 "model_calls": 0,
                 "model_cost": 0.0,
+                "git_diff": None,
                 "evaluation_info": {
                     "meta": {
                         "success": False,
@@ -764,6 +835,7 @@ def test_all_multi_thread(
                         "error": str(e),
                         "model_calls": 0,
                         "model_cost": 0.0,
+                        "git_diff": None,
                         "evaluation_info": {
                             "meta": {
                                 "success": False,

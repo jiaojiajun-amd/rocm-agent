@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import requests
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -48,7 +49,7 @@ class RemoteDockerEnvironment:
             raise
 
     def get_template_vars(self) -> dict[str, Any]:
-        return asdict(self.config)
+        return asdict(self.config) | platform.uname()._asdict()
 
     def _start_remote_container(self):
         """Sends a request to the remote server to start a container."""

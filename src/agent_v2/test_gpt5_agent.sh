@@ -21,6 +21,6 @@ python test_rocm_agent_amd.py test-all \
     --docker-server "10.67.77.184:9527" \
     --eval-server "10.67.77.184:9528" \
     --output /home/jiajjiao/rocm-agent/results/all_results_v4_resoning_high_config_v1_repeat_1.json \
-
+    --workers 8
 
 

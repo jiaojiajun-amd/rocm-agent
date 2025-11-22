@@ -52,8 +52,8 @@ agent:
     
     This is NOT a bug fix, NOT JavaScript/Python coding, but GPU performance optimization.
 
-    **STEP LIMIT: You have a maximum of 50 steps to complete this task.**
-    **Expected workflow: ~30-50 steps for single optimization iteration.**
+    **STEP LIMIT: You have a maximum of 100 steps to complete this task.**
+    **Expected workflow: ~40-80 steps for single optimization iteration.**
 
     IMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.
     Every command should be purposeful and directly related to understanding, optimizing, or verifying the kernel code.
@@ -66,25 +66,25 @@ agent:
     - MODIFY: ONLY the specific kernel file mentioned in the PR description
     - DO NOT MODIFY: test_xxx files, benchmark_xxx files, or any configuration files
 
-    ## Recommended Workflow (Expected: 30-50 steps total for ONE optimization iteration)
+    ## Recommended Workflow (Expected: 40-80 steps total for ONE optimization iteration)
     
-    ### Phase 1: Understanding (8-12 steps)
-    1. **Read the benchmark file** to understand how performance is measured (3-5 steps)
+    ### Phase 1: Understanding (10-20 steps)
+    1. **Read the benchmark file** to understand how performance is measured (5-10 steps)
        - Use the "Benchmark file:" path from PR description
        - Understand what operations are being benchmarked, what metrics matter
     
-    2. **Read the kernel implementation file** mentioned in the PR description (5-7 steps)
+    2. **Read the kernel implementation file** mentioned in the PR description (5-10 steps)
        - Use the "Kernel file:" path from PR description
        - Examine the specific kernel file (e.g., rocprim/include/rocprim/block/xxx.hpp)
        - Understand current implementation, identify optimization opportunities
     
-    ### Phase 2: Single Optimization Round (20-30 steps)
-    3. **Make optimization changes** to the kernel file (8-12 steps)
+    ### Phase 2: Single Optimization Round (30-50 steps)
+    3. **Make optimization changes** to the kernel file (10-20 steps)
        - Edit the specific kernel file only
        - Do NOT modify test or benchmark files
        - Apply your best optimization based on analysis
     
-    4. **CRITICAL: Verify compilation** (2-3 steps)
+    4. **CRITICAL: Verify compilation** (3-5 steps)
        - **MANDATORY STEP - DO NOT SKIP**
        - After code modification, you MUST verify it compiles successfully
        - Use the test file name from PR description: `cd build && make <test_file_name_from_PR>`
@@ -92,18 +92,18 @@ agent:
        - If compilation fails, you MUST fix the errors before proceeding
        - **DO NOT proceed to testing or benchmarking if compilation fails**
     
-    5. **Run tests** to verify correctness (3-5 steps)
+    5. **Run tests** to verify correctness (5-10 steps)
        - Use the "Test file:" path from PR description to identify the test executable
        - Build and run unit tests: `cd build && ./<test_executable_path>`
        - Fix any correctness issues before proceeding
     
-    6. **Run benchmarks** to measure performance (3-5 steps)
+    6. **Run benchmarks** to measure performance (5-10 steps)
        - Use the "Benchmark file:" path from PR description to identify the benchmark executable
        - Build and run benchmark programs
        - Analyze the performance results
     
-    ### Phase 3: Final Verification and Submit (4-6 steps)
-    7. **MANDATORY: Final compilation check before submit** (2-3 steps)
+    ### Phase 3: Final Verification and Submit (5-10 steps)
+    7. **MANDATORY: Final compilation check before submit** (3-5 steps)
         - Before submitting, you MUST ensure the code compiles successfully
         - Run: `cd build && make <test_file_name_from_PR>`
         - If compilation fails, fix it immediately - DO NOT SUBMIT
@@ -111,7 +111,7 @@ agent:
     8. **SUBMIT your work** (1 step) when:
         - Code compiles successfully (MANDATORY requirement)
         - Tests pass and benchmarks complete
-        - You've used 40-50 steps, OR optimization is satisfactory
+        - You've used 70-90 steps, OR optimization is satisfactory
     
     **CRITICAL COMPILATION RULE:**
     - **NEVER SKIP compilation verification after modifying code**
@@ -314,15 +314,17 @@ agent:
     
     **You SHOULD submit when you have:**
     1. **Code compiles successfully** (MANDATORY - check before every submit)
-    2. Completed ONE optimization iteration following this pattern:
-       - Optimize kernel → **Verify Compilation** → Run tests (verify correctness) → Run benchmarks (measure performance)
-    3. Tests pass successfully, OR
-    4. Used 40-50+ steps
+    2. Completed 2-3 optimization iterations following this pattern:
+       - Optimize kernel → **Verify Compilation** → Run tests (verify correctness) → Run benchmarks (measure performance) → Analyze results → Repeat
+    3. Achieved noticeable performance improvement, OR
+    4. Completed meaningful attempts but hit diminishing returns, OR
+    5. Used 170-180+ steps (approaching limit)
     
     **CRITICAL WORKFLOW RULE:**
     - **ALWAYS verify compilation after editing**: Optimize → **Check Compilation** → Test → Benchmark
-    - **NEVER skip the compilation step** - it's mandatory after code change
+    - **NEVER skip the compilation step** - it's mandatory after every code change
     - DO NOT run tests/benchmarks on code that doesn't compile
+    - You SHOULD iterate 2-3 times based on benchmark feedback, not just once
     
     **To submit, run this exact command (ONLY after verifying compilation succeeds):**
     ```bash
@@ -330,13 +332,12 @@ agent:
     ```
     
     **Expected pattern with compilation checks:**
-    - Initial reading: ~10 steps
-    - Optimize: ~10 steps
-    - Compile Check: ~2 steps
-    - Test: ~5 steps
-    - Benchmark: ~5 steps
-    - Final compile verification: ~2 steps
-    - Total: ~30-50 steps for single iteration with compilation checks
+    - Round 1: Optimize (10 steps) → **Compile Check (3 steps)** → Test (8 steps) → Benchmark (8 steps) → Analyze (3 steps) = ~32 steps
+    - Round 2: Optimize (10 steps) → **Compile Check (3 steps)** → Test (8 steps) → Benchmark (8 steps) → Analyze (3 steps) = ~32 steps
+    - Round 3: Optimize (10 steps) → **Compile Check (3 steps)** → Test (8 steps) → Benchmark (8 steps) = ~29 steps
+    - Initial reading: ~20 steps
+    - Final compile verification: ~3 steps
+    - Total: ~115-135 steps for 3 iterations with compilation checks
     
     **NEVER SUBMIT WITHOUT VERIFYING COMPILATION FIRST**
     You cannot continue working after submitting.
@@ -409,15 +410,16 @@ agent:
     2. **VERIFY COMPILATION** (mandatory - use make command with test file name)
     3. If compilation succeeds → run tests
     4. If tests pass → run benchmarks
-    5. If benchmarks complete → submit
+    5. Analyze results and iterate
     
     **WHEN TO STOP AND SUBMIT:**
     - **MANDATORY PRE-SUBMIT CHECK:** Code must compile successfully
-    - After completing ONE optimization iteration with tests and benchmarks
-    - Typical workflow: Understand (10 steps) → Optimize (10 steps) → **Compile (2 steps)** → Test (5 steps) → Benchmark (5 steps) → SUBMIT
-    - You have max 50 steps total - aim for ONE complete iteration
+    - After completing 2-3 optimization iterations with benchmark feedback
+    - Typical workflow: Understand (15 steps) → Optimize (10 steps) → **Compile (3 steps)** → Test (8 steps) → Benchmark (8 steps) → 
+      Analyze results (3 steps) → Optimize again (10 steps) → **Compile (3 steps)** → Test (8 steps) → Benchmark (8 steps) → SUBMIT
+    - You have max 200 steps total - aim for 2-3 complete iterations
     - **KEY PRINCIPLE:** Always **COMPILE CHECK** → test → benchmark. Never skip compilation verification.
-    - Submit when: **compilation succeeds** AND (tests pass OR 40-50 steps used)
+    - Submit when: **compilation succeeds** AND (performance improved OR 2-3 iterations done OR 170-180 steps used)
     - Submit command: echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached
     
     # Memory (Summary of previous steps)
@@ -433,7 +435,7 @@ agent:
     
     # Analysis of Last Observation
     {{reasoning}}
-  step_limit: 0.  # Single iteration workflow: understand → optimize → compile check → test → benchmark → submit (target: 30-50 steps)
+  step_limit: 300  # Iterative workflow: understand → optimize → test → benchmark → iterate 2-3 times → submit
   cost_limit: 3.
 
 environment:
