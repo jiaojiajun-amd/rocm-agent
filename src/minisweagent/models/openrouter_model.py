@@ -49,6 +49,7 @@ class OpenRouterModel:
         self.n_calls = 0
         self._api_url = "https://openrouter.ai/api/v1/chat/completions"
         self._api_key = os.getenv("OPENROUTER_API_KEY", "")
+        self.session = requests.Session()
 
     @retry(
         stop=stop_after_attempt(10),
@@ -75,7 +76,7 @@ class OpenRouterModel:
         }
 
         try:
-            response = requests.post(self._api_url, headers=headers, data=json.dumps(payload), timeout=60)
+            response = self.session.post(self._api_url, headers=headers, data=json.dumps(payload), timeout=60)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
@@ -116,3 +117,8 @@ class OpenRouterModel:
 
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config) | {"n_model_calls": self.n_calls, "model_cost": self.cost}
+    
+    def __del__(self):
+        """Close the session when the object is destroyed."""
+        if hasattr(self, 'session'):
+            self.session.close()

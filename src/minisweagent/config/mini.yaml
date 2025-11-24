@@ -147,7 +147,7 @@ agent:
 
 environment:
   cwd: "/app/rocm-libraries/projects/rocprim"
-  timeout: 60
+  timeout: 1800
   env:
     PAGER: cat
     MANPAGER: cat

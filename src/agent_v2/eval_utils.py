@@ -2,17 +2,17 @@
 
 # Copied and adapted from https://github.com/prompteus/calc-x/blob/master/gadgets/metrics.py
 
+import asyncio
 import math
 import re
 import string
+import json
 
 import sympy
+import aiohttp
 
 from agentlightning.reward import reward
 from minisweagent.utils.log import add_file_handler, logger
-import requests, json 
-
-import requests, json
 from typing import Any, Dict, Tuple
 
 
@@ -60,94 +60,84 @@ async def evaluate(exit_status, result, container_id, instance_id, dataset_name,
     logger.info(f"Sending evaluation request to {eval_server_url}/evaluate_v3")
     logger.debug(f"Payload: {payload}")
     
-    try:
-        # 发送评估请求
-        resp = requests.post(
-            f"{eval_server_url}/evaluate_v3", 
-            json=payload, 
-            timeout=3600  # 增加超时时间，因为包含编译和执行
-        )
-        
-        logger.info(f"Received response with status code: {resp.status_code}")
-        
-        # 检查 HTTP 状态码
-        resp.raise_for_status()
-        
-        # 解析响应
-        data = resp.json()
-        logger.info(f"Response data: {json.dumps(data, indent=2)}")
-        
-        # 检查评估是否成功
-        if not data.get("success", False):
-            error_msg = data.get("error", "Unknown error")
-            logger.error(f"Evaluation failed: {error_msg}")
-            
-            # 记录详细错误信息
-            if "error_detail" in data:
-                logger.error(f"Error detail: {data['error_detail']}")
-            if "build_output" in data:
-                logger.error(f"Build output: {data['build_output'][:500]}...")  # 只记录前500字符
-            
-            return 0.0, -1.0
-        
-        # 获取 reward
-        reward = float(data.get("reward", 0.0))
-        speedup = float(data.get("speedup", -1.0))
-        
-        # 记录详细信息
-        exit_code = data.get("exit_code", -1)
-        timed_out = data.get("timed_out", False)
-        gpu_id = data.get("gpu_id", "N/A")
-        
-        logger.info(f"Evaluation completed successfully")
-        logger.info(f"Reward: {reward}")
-        logger.info(f"Exit code: {exit_code}")
-        logger.info(f"Timed out: {timed_out}")
-        logger.info(f"GPU ID: {gpu_id}")
-        
-        # 可选：记录输出的前几行
-        if "stdout" in data and data["stdout"]:
-            stdout_preview = data["stdout"][:200]
-            logger.debug(f"Stdout preview: {stdout_preview}...")
-        
-        logger.info("="*80)
-        return reward, speedup
+    timeout = aiohttp.ClientTimeout(total=3600)
+    connector = aiohttp.TCPConnector(limit=100, limit_per_host=50)
     
-    except requests.Timeout as e:
+    try:
+        # 使用 aiohttp 进行异步 HTTP 请求，支持高并发
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            async with session.post(
+                f"{eval_server_url}/evaluate_v3",
+                json=payload
+            ) as resp:
+                logger.info(f"Received response with status code: {resp.status}")
+                
+                # 读取响应文本
+                resp_text = await resp.text()
+                
+                # 检查 HTTP 状态码
+                if resp.status >= 400:
+                    logger.error(f"HTTP error {resp.status}: {resp_text[:500]}")
+                    logger.error("="*80)
+                    return 0.0, -1.0
+                
+                # 解析响应
+                data = json.loads(resp_text)
+                logger.info(f"Response data: {json.dumps(data, indent=2)}")
+                
+                # 检查评估是否成功
+                if not data.get("success", False):
+                    error_msg = data.get("error", "Unknown error")
+                    logger.error(f"Evaluation failed: {error_msg}")
+                    
+                    # 记录详细错误信息
+                    if "error_detail" in data:
+                        logger.error(f"Error detail: {data['error_detail']}")
+                    if "build_output" in data:
+                        logger.error(f"Build output: {data['build_output'][:500]}...")
+                    
+                    return 0.0, -1.0
+                
+                # 获取 reward
+                reward = float(data.get("reward", 0.0))
+                speedup = float(data.get("speedup", -1.0))
+                
+                # 记录详细信息
+                exit_code = data.get("exit_code", -1)
+                timed_out = data.get("timed_out", False)
+                gpu_id = data.get("gpu_id", "N/A")
+                
+                logger.info(f"Evaluation completed successfully")
+                logger.info(f"Reward: {reward}")
+                logger.info(f"Exit code: {exit_code}")
+                logger.info(f"Timed out: {timed_out}")
+                logger.info(f"GPU ID: {gpu_id}")
+                
+                # 可选：记录输出的前几行
+                if "stdout" in data and data["stdout"]:
+                    stdout_preview = data["stdout"][:200]
+                    logger.debug(f"Stdout preview: {stdout_preview}...")
+                
+                logger.info("="*80)
+                return reward, speedup
+    
+    except asyncio.TimeoutError as e:
         logger.error(f"Request timeout after 3600 seconds: {str(e)}")
         logger.error("="*80)
         return 0.0, -1.0
     
-    except requests.HTTPError as e:
-        logger.error(f"HTTP error occurred: {str(e)}")
-        logger.error(f"Response status code: {resp.status_code}")
-        try:
-            error_data = resp.json()
-            logger.error(f"Error response: {json.dumps(error_data, indent=2)}")
-        except:
-            logger.error(f"Response text: {resp.text[:500]}")
-        logger.error("="*80)
-        return 0.0, -1.0
-    
-    except requests.ConnectionError as e:
-        logger.error(f"Connection error: {str(e)}")
-        logger.error(f"Could not connect to evaluation server at {eval_server_url}")
-        logger.error("="*80)
-        return 0.0, -1.0
-    
-    except requests.RequestException as e:
-        logger.error(f"Request exception occurred: {str(e)}")
+    except aiohttp.ClientError as e:
+        logger.error(f"HTTP client error occurred: {str(e)}")
         logger.error("="*80)
         return 0.0, -1.0
     
     except (ValueError, KeyError, TypeError) as e:
         logger.error(f"Error parsing response: {str(e)}")
-        logger.error(f"Response data: {resp.text[:500]}")
         logger.error("="*80)
         return 0.0, -1.0
     
     except Exception as e:
-        logger.error(f"Unexpected error in get_reward: {str(e)}")
+        logger.error(f"Unexpected error in evaluate: {str(e)}")
         logger.error(f"Exception type: {type(e).__name__}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
@@ -230,104 +220,94 @@ async def evaluate_info(
     logger.info(f"Sending evaluation request to {eval_server_url}/evaluate_v3")
     logger.debug(f"Payload: {payload}")
 
+    timeout = aiohttp.ClientTimeout(total=evaluation_info["request"]["timeout_sec"])
+    connector = aiohttp.TCPConnector(limit=100, limit_per_host=50)
+    
     try:
-        resp = requests.post(
-            f"{eval_server_url}/evaluate_v3",
-            json=payload,
-            timeout=evaluation_info["request"]["timeout_sec"],
-        )
-        evaluation_info["response"]["status_code"] = resp.status_code
-        evaluation_info["response"]["raw"] = resp.text
+        # 使用 aiohttp 进行异步 HTTP 请求，支持高并发
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            async with session.post(
+                f"{eval_server_url}/evaluate_v3",
+                json=payload
+            ) as resp:
+                evaluation_info["response"]["status_code"] = resp.status
+                resp_text = await resp.text()
+                evaluation_info["response"]["raw"] = resp_text
 
-        logger.info(f"Received response with status code: {resp.status_code}")
-        resp.raise_for_status()
+                logger.info(f"Received response with status code: {resp.status}")
+                
+                # 检查 HTTP 状态码
+                if resp.status >= 400:
+                    logger.error(f"HTTP error {resp.status}: {resp_text[:500]}")
+                    evaluation_info["meta"]["error"] = f"http_status_{resp.status}"
+                    logger.error("="*80)
+                    return 0.0, -1.0, evaluation_info
 
-        data = resp.json()
-        evaluation_info["response"]["json"] = data
-        logger.info(f"Response data: {json.dumps(data, indent=2)}")
+                data = json.loads(resp_text)
+                evaluation_info["response"]["json"] = data
+                logger.info(f"Response data: {json.dumps(data, indent=2)}")
 
-        # success 检查
-        if not data.get("success", False):
-            error_msg = data.get("error", "Unknown error")
-            evaluation_info["meta"]["success"] = False
-            evaluation_info["meta"]["error"] = error_msg
+                # success 检查
+                if not data.get("success", False):
+                    error_msg = data.get("error", "Unknown error")
+                    evaluation_info["meta"]["success"] = False
+                    evaluation_info["meta"]["error"] = error_msg
 
-            logger.error(f"Evaluation failed: {error_msg}")
-            # 记录详细错误信息
-            if "error_detail" in data:
-                logger.error(f"Error detail: {data['error_detail']}")
-            if "build_output" in data:
-                logger.error(f"Build output: {data['build_output'][:500]}...")
-            # 将这些信息也放进 evaluation_info
-            for key in ["error_detail", "build_output", "stdout", "stderr"]:
-                if key in data:
-                    evaluation_info["extracted"][key] = data[key]
-            return 0.0, -1.0, evaluation_info
+                    logger.error(f"Evaluation failed: {error_msg}")
+                    # 记录详细错误信息
+                    if "error_detail" in data:
+                        logger.error(f"Error detail: {data['error_detail']}")
+                    if "build_output" in data:
+                        logger.error(f"Build output: {data['build_output'][:500]}...")
+                    # 将这些信息也放进 evaluation_info
+                    for key in ["error_detail", "build_output", "stdout", "stderr"]:
+                        if key in data:
+                            evaluation_info["extracted"][key] = data[key]
+                    return 0.0, -1.0, evaluation_info
 
-        # 提取 reward/speedup
-        reward_val = float(data.get("reward", 0.0))
-        speedup_val = float(data.get("speedup", -1.0))
+                # 提取 reward/speedup
+                reward_val = float(data.get("reward", 0.0))
+                speedup_val = float(data.get("speedup", -1.0))
 
-        # 额外字段
-        exit_code = data.get("exit_code", -1)
-        timed_out = data.get("timed_out", False)
-        gpu_id = data.get("gpu_id", "N/A")
+                # 额外字段
+                exit_code = data.get("exit_code", -1)
+                timed_out = data.get("timed_out", False)
+                gpu_id = data.get("gpu_id", "N/A")
 
-        evaluation_info["meta"]["success"] = True
-        evaluation_info["extracted"].update({
-            "reward": reward_val,
-            "speedup": speedup_val,
-            "exit_code": exit_code,
-            "timed_out": timed_out,
-            "gpu_id": gpu_id,
-        })
+                evaluation_info["meta"]["success"] = True
+                evaluation_info["extracted"].update({
+                    "reward": reward_val,
+                    "speedup": speedup_val,
+                    "exit_code": exit_code,
+                    "timed_out": timed_out,
+                    "gpu_id": gpu_id,
+                })
 
-        # 可选：记录输出预览
-        if "stdout" in data and data["stdout"]:
-            stdout_preview = data["stdout"][:200]
-            logger.debug(f"Stdout preview: {stdout_preview}...")
-            evaluation_info["extracted"]["stdout_preview"] = stdout_preview
+                # 可选：记录输出预览
+                if "stdout" in data and data["stdout"]:
+                    stdout_preview = data["stdout"][:200]
+                    logger.debug(f"Stdout preview: {stdout_preview}...")
+                    evaluation_info["extracted"]["stdout_preview"] = stdout_preview
 
-        logger.info("Evaluation completed successfully")
-        logger.info(f"Reward: {reward_val}")
-        logger.info(f"Exit code: {exit_code}")
-        logger.info(f"Timed out: {timed_out}")
-        logger.info(f"GPU ID: {gpu_id}")
-        logger.info("="*80)
+                logger.info("Evaluation completed successfully")
+                logger.info(f"Reward: {reward_val}")
+                logger.info(f"Exit code: {exit_code}")
+                logger.info(f"Timed out: {timed_out}")
+                logger.info(f"GPU ID: {gpu_id}")
+                logger.info("="*80)
 
-        return reward_val, speedup_val, evaluation_info
+                return reward_val, speedup_val, evaluation_info
 
-    except requests.Timeout as e:
+    except asyncio.TimeoutError as e:
         logger.error(f"Request timeout after {evaluation_info['request']['timeout_sec']} seconds: {str(e)}")
         logger.error("="*80)
         evaluation_info["meta"]["error"] = f"timeout: {str(e)}"
         return 0.0, -1.0, evaluation_info
 
-    except requests.HTTPError as e:
-        logger.error(f"HTTP error occurred: {str(e)}")
-        status_code = evaluation_info["response"]["status_code"]
-        logger.error(f"Response status code: {status_code}")
-        try:
-            error_data = resp.json()
-            logger.error(f"Error response: {json.dumps(error_data, indent=2)}")
-            evaluation_info["response"]["json"] = error_data
-        except Exception:
-            logger.error(f"Response text: {resp.text[:500]}")
+    except aiohttp.ClientError as e:
+        logger.error(f"HTTP client error occurred: {str(e)}")
         logger.error("="*80)
-        evaluation_info["meta"]["error"] = f"http_error: {str(e)}"
-        return 0.0, -1.0, evaluation_info
-
-    except requests.ConnectionError as e:
-        logger.error(f"Connection error: {str(e)}")
-        logger.error(f"Could not connect to evaluation server at {eval_server_url}")
-        logger.error("="*80)
-        evaluation_info["meta"]["error"] = f"connection_error: {str(e)}"
-        return 0.0, -1.0, evaluation_info
-
-    except requests.RequestException as e:
-        logger.error(f"Request exception occurred: {str(e)}")
-        logger.error("="*80)
-        evaluation_info["meta"]["error"] = f"request_exception: {str(e)}"
+        evaluation_info["meta"]["error"] = f"client_error: {str(e)}"
         return 0.0, -1.0, evaluation_info
 
     except (ValueError, KeyError, TypeError) as e:

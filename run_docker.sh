@@ -9,5 +9,5 @@ docker run -it \
     -v /home/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
 	--shm-size 128G \
 	-w /app \
-    --name swe-verl-1 \
+    --name rocm-agent \
 	rocm-rl

@@ -108,7 +108,7 @@ class LiteLLMAMDModel:
         merged_kwargs.update(kwargs)
         
         try:
-            if self.config.model_name in ["gpt-5", "claude-4", "o3","claude-4.5"]:
+            if self.config.model_name in ["gpt-5", "claude-4", "o3","claude-4.5", "gpt-5.1-codex"]:
                 response = litellm.completion(
                     model=f"hosted_vllm/{self.config.model_name}",
                     messages=messages,

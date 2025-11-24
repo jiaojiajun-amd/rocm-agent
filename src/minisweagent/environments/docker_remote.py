@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import time
 import requests
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -12,11 +13,13 @@ class RemoteDockerEnvironmentConfig:
     cwd: str = "/"
     env: dict[str, str] = field(default_factory=dict)
     forward_env: list[str] = field(default_factory=list)
-    timeout: int = 30
+    timeout: int = 1800  # 默认 1800 秒（30 分钟）用于长时间运行的命令
     executable: str = os.getenv("MSWEA_DOCKER_EXECUTABLE", "docker")
     run_args: list[str] = field(default_factory=lambda: ["--rm"])
     container_timeout: str = "2h"
     pull_timeout: int = 400
+    max_retries: int = 3  # 仅用于启动容器
+    retry_delay: int = 5
     environment_class: str = "docker_remote"
     server_url : str = "http://localhost:9527"
 
@@ -40,36 +43,73 @@ class RemoteDockerEnvironment:
         self.container_id: str | None = None
         self.config = config_class(**kwargs)
         
+        # 配置 Session 以处理连接问题
+        self.session = requests.Session()
+        
+        # 配置适配器：连接池和重试策略
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        
+        # 配置连接池
+        adapter = HTTPAdapter(
+            pool_connections=5,
+            pool_maxsize=10,
+            max_retries=0,  # 我们自己处理重试
+            pool_block=False
+        )
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        
+        # 设置 keep-alive 和连接超时
+        self.session.headers.update({
+            'Connection': 'keep-alive',
+            'Keep-Alive': 'timeout=300, max=100'
+        })
+        
         try:
             self._start_remote_container()
         except Exception as e:
             self.logger.error(f"Failed to initialize remote container: {e}")
-            # 如果启动失败，确保在对象销毁时不会尝试清理一个不存在的容器
             self.container_id = None
+            self.session.close()
             raise
 
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config) | platform.uname()._asdict()
 
     def _start_remote_container(self):
-        """Sends a request to the remote server to start a container."""
+        """Sends a request to the remote server to start a container with retry logic."""
         self.logger.info("Requesting remote server to start a new container...")
         endpoint = f"{self.server_url}/start"
         payload = {"config": asdict(self.config)}
         
-        response = requests.post(endpoint, json=payload, timeout=self.config.pull_timeout + 10)
-        response.raise_for_status()  # Will raise an HTTPError for bad responses (4xx or 5xx)
-        
-        data = response.json()
-        self.container_id = data.get("container_id")
+        for attempt in range(self.config.max_retries):
+            try:
+                response = self.session.post(endpoint, json=payload, timeout=self.config.pull_timeout + 10)
+                response.raise_for_status()
+                
+                data = response.json()
+                self.container_id = data.get("container_id")
 
-        if not self.container_id:
-            raise RuntimeError("Server did not return a container ID.")
-            
-        self.logger.info(f"Remote container started with ID: {self.container_id}")
+                if not self.container_id:
+                    raise RuntimeError("Server did not return a container ID.")
+                    
+                self.logger.info(f"Remote container started with ID: {self.container_id}")
+                return
+                
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < self.config.max_retries - 1:
+                    self.logger.warning(f"Attempt {attempt + 1}/{self.config.max_retries} failed: {e}. Retrying in {self.config.retry_delay}s...")
+                    time.sleep(self.config.retry_delay)
+                else:
+                    self.logger.error(f"All {self.config.max_retries} attempts failed to start container.")
+                    raise
 
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
-        """Executes a command in the remote Docker container."""
+        """Executes a command in the remote Docker container.
+        
+        Note: No retry logic to avoid executing commands multiple times.
+        """
         if not self.container_id:
             raise RuntimeError("Remote container is not running or was not initialized properly.")
         
@@ -85,26 +125,49 @@ class RemoteDockerEnvironment:
         }
         
         try:
-            response = requests.post(endpoint, json=payload, timeout=(timeout or self.config.timeout) + 10)
+            # 超时时间：1800 秒（30 分钟）用于长时间运行的命令
+            # 如果命令指定了更长的超时，使用命令的超时 + 余量
+            default_timeout = 1800
+            command_timeout = timeout or self.config.timeout
+            request_timeout = max(default_timeout, command_timeout + 30)
+            
+            response = self.session.post(
+                endpoint, 
+                json=payload, 
+                timeout=request_timeout
+            )
             response.raise_for_status()
             return response.json()
+            
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Failed to execute command remotely: {e}")
             return {"output": f"Error communicating with server: {e}", "returncode": -1}
 
     def cleanup(self):
-        """Sends a request to the remote server to clean up the container."""
+        """Sends a request to the remote server to clean up the container with retry logic."""
         if self.container_id:
             self.logger.info(f"Requesting cleanup for remote container {self.container_id}")
             endpoint = f"{self.server_url}/cleanup"
             payload = {"container_id": self.container_id, "executable": self.config.executable}
-            try:
-                # Use a short timeout for cleanup, as it's a "fire and forget" action
-                requests.post(endpoint, json=payload, timeout=10)
-            except requests.exceptions.RequestException as e:
-                self.logger.warning(f"Failed to send cleanup request to server (container might be orphaned): {e}")
-            finally:
-                self.container_id = None # Prevent multiple cleanup attempts
+            
+            for attempt in range(self.config.max_retries):
+                try:
+                    self.session.post(endpoint, json=payload, timeout=10)
+                    self.logger.info("Cleanup request sent successfully.")
+                    break
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    if attempt < self.config.max_retries - 1:
+                        self.logger.warning(f"Cleanup attempt {attempt + 1}/{self.config.max_retries} failed: {e}. Retrying in {self.config.retry_delay}s...")
+                        time.sleep(self.config.retry_delay)
+                    else:
+                        self.logger.warning(f"Failed to send cleanup request after {self.config.max_retries} attempts (container might be orphaned): {e}")
+                except requests.exceptions.RequestException as e:
+                    self.logger.warning(f"Failed to send cleanup request to server (container might be orphaned): {e}")
+                    break
+            
+            self.container_id = None
+        
+        self.session.close()
 
     def __del__(self):
         """Cleanup container when object is destroyed."""

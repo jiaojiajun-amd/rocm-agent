@@ -9,5 +9,5 @@ docker run -it \
 	--privileged \
     -v /home/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
 	-v /mnt/raid0/jiajjiao/models:/models \
-    --name sglang-k2 \
+    --name sglang-rocm \
 	docker.io/rocm/sgl-dev:v0.5.5-rocm700-mi30x-20251108
