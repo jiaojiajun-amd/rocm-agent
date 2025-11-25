@@ -9,9 +9,9 @@ python ../generate_training_data.py generate-multi \
     --eval-server "10.67.77.184:9528" \
     --output /home/jiajjiao/rocm-agent/training_data/small_dataset.json \
     --config /home/jiajjiao/rocm-agent/src/minisweagent/config/mini.yaml \
-    --workers 8 \
+    --workers 1 \
     --max-tasks 1 \
-    --samples-per-task 32 \
+    --samples-per-task 1 \
     --log-file /home/jiajjiao/rocm-agent/training_data/small_dataset.log
 
 # python ../generate_training_data.py generate-multi \
@@ -22,8 +22,34 @@ python ../generate_training_data.py generate-multi \
 #     --eval-server "10.67.77.184:9528" \
 #     --output /home/jiajjiao/rocm-agent/training_data/small_dataset-glm.json \
 #     --config /home/jiajjiao/rocm-agent/src/minisweagent/config/mini.yaml \
-#     --workers 16 \
+#     --workers 1 \
 #     --max-tasks 1 \
-#     --samples-per-task 32 \
+#     --samples-per-task 1 \
 #     --log-file /home/jiajjiao/rocm-agent/training_data/small_dataset_glm.log
+
+# python ../generate_training_data.py generate-multi \
+#     --dataset /home/jiajjiao/rocm-agent/data/rocprim_v5.json \
+#     --api-key "c1f7f3ee59064fc0a5fad8c2586f1bd9" \
+#     --model "o3-mini" \
+#     --docker-server "10.67.77.184:9527" \
+#     --eval-server "10.67.77.184:9528" \
+#     --output /home/jiajjiao/rocm-agent/training_data/small_dataset-o3mini.json \
+#     --config /home/jiajjiao/rocm-agent/src/minisweagent/config/mini.yaml \
+#     --workers 1 \
+#     --max-tasks 1 \
+#     --samples-per-task 1 \
+#     --log-file /home/jiajjiao/rocm-agent/training_data/small_dataset_o3mini.log
+
+    python ../generate_training_data.py generate-multi \
+    --dataset /home/jiajjiao/rocm-agent/data/rocprim_v5.json \
+    --api-key "c1f7f3ee59064fc0a5fad8c2586f1bd9" \
+    --model "Claude-Sonnet-4.5" \
+    --docker-server "10.67.77.184:9527" \
+    --eval-server "10.67.77.184:9528" \
+    --output /home/jiajjiao/rocm-agent/training_data/small_dataset_claude-4.json \
+    --config /home/jiajjiao/rocm-agent/src/minisweagent/config/mini.yaml \
+    --workers 8 \
+    --max-tasks 10 \
+    --samples-per-task 32 \
+    --log-file /home/jiajjiao/rocm-agent/training_data/small_dataset_claude-4.log
 

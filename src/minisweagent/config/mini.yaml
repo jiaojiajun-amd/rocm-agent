@@ -142,6 +142,19 @@ agent:
 
     Note: In rare cases, if you need to reference a similar format in your command, you might have
     to proceed in two steps, first writing TRIPLEBACKTICKSBASH, then replacing them with ```bash.
+  observation_reasoning_template: |
+    The following observation from a command execution is very long. Please analyze it and provide a concise summary
+    focusing on the key information relevant to completing the task. Include:
+    1. What the command did and its purpose
+    2. Key outputs, results, or patterns in the data
+    3. Any errors, warnings, or issues that need attention
+    4. Actionable next steps or recommendations
+
+    Observation:
+    {{observation}}
+
+    Provide your analysis in 2-3 concise paragraphs. Focus on what matters most for the task.
+  max_observation_tokens: 1000
   step_limit: 0.
   cost_limit: 3.
 

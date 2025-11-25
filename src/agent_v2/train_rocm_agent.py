@@ -39,7 +39,7 @@ from datasets import Dataset as HuggingFaceDataset
 import agentlightning as agl
 
 PROJECT_NAME = "rocm-agent-rl"
-EXPERIMENT_NAME = "qwen-3-8B-32k_rocprim_v4_eval_v3"
+EXPERIMENT_NAME = "Qwen/Qwen3-30B-A3B-32k_rocprim_v4_eval_v3"
 DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
@@ -85,7 +85,7 @@ def verl_default_config() -> Dict[str, Any]:
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "Qwen/Qwen3-8B",
+                "path": "Qwen/Qwen3-30B-A3B",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },

@@ -28,6 +28,17 @@ class AgentConfig:
     action_regex: str = r"```bash\s*\n(.*?)\n```"
     step_limit: int = 0
     cost_limit: float = 3.0
+    observation_reasoning_template: str = (
+        "The following observation is very long. Please analyze it and provide a concise summary "
+        "focusing on the key information relevant to completing the task. Include:\n"
+        "1. What the command did\n"
+        "2. Key outputs or results\n"
+        "3. Any errors or issues\n"
+        "4. Next steps to consider\n\n"
+        "Observation:\n{{observation}}\n\n"
+        "Provide your analysis in 2-3 paragraphs."
+    )
+    max_observation_tokens: int = 1000
 
 
 class NonTerminatingException(Exception):
@@ -68,8 +79,24 @@ class MiniAgent:
             **kwargs, **template_vars, **self.extra_template_vars
         )
 
+    def count_tokens(self, text: str) -> int:
+        """Estimate token count (roughly 4 chars per token for English)."""
+        return len(text) // 4
+
     def add_message(self, role: str, content: str, **kwargs):
+        """Add message to history. Supports full_content for storing complete observation."""
         self.messages.append({"role": role, "content": content, **kwargs})
+    
+    def get_full_messages(self) -> list[dict]:
+        """Get messages with full content for saving training data."""
+        full_messages = []
+        for msg in self.messages:
+            full_msg = msg.copy()
+            if "full_content" in msg:
+                full_msg["content"] = msg["full_content"]
+                del full_msg["full_content"]
+            full_messages.append(full_msg)
+        return full_messages
 
     def run(self, task: str, **kwargs) -> tuple[str, str]:
         """Run step() until agent is finished. Return exit status & message"""
@@ -102,8 +129,38 @@ class MiniAgent:
         """Execute the action and return the observation."""
         output = self.execute_action(self.parse_action(response))
         observation = self.render_template(self.config.action_observation_template, output=output)
-        self.add_message("user", observation)
+        
+        # Check if observation is too long
+        token_count = self.count_tokens(observation)
+        if token_count > self.config.max_observation_tokens:
+            # Perform reasoning to compress the observation
+            reasoning = self._reason_about_observation(observation)
+            # Store full observation for training data, but use reasoning for context
+            self.add_message("user", reasoning, full_content=observation)
+        else:
+            self.add_message("user", observation)
+        
         return output
+    
+    def _reason_about_observation(self, observation: str) -> str:
+        """Use model to reason about and summarize a long observation."""
+        reasoning_prompt = self.render_template(
+            self.config.observation_reasoning_template,
+            observation=observation
+        )
+        
+        # Create temporary messages for reasoning
+        reasoning_messages = [
+            {"role": "system", "content": "You are a helpful assistant that analyzes command outputs."},
+            {"role": "user", "content": reasoning_prompt}
+        ]
+        
+        # Query model for reasoning (this doesn't add to main message history)
+        reasoning_response = self.model.query(reasoning_messages)
+        reasoning_content = reasoning_response.get("content", "")
+        
+        # Format the reasoning as observation
+        return f"<observation_summary>\n{reasoning_content}\n</observation_summary>"
 
     def parse_action(self, response: dict) -> dict:
         """Parse the action from the message. Returns the action."""

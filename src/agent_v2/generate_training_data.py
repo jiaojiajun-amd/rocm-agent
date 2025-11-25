@@ -154,7 +154,7 @@ async def generate_single_example(
             instance_id=instance_id,
             sample_id=sample_id,
             problem_statement=problem,
-            messages=agent.messages.copy(),
+            messages=agent.get_full_messages(),
             git_diff=git_diff,
             exit_status=exit_status,
             reward=float(reward),

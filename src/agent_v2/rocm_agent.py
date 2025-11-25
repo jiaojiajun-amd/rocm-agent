@@ -109,10 +109,11 @@ def get_agent(instance: dict,
     agent = None
 
     env = get_rocm_environment(config, instance, server_url=server_url)
-    agent = DefaultAgent(
-        model=model,
+    from minisweagent.agents.mini import MiniAgent
+    agent = MiniAgent(
+        model = model,
         env=env,
-        **config.get("agent", {}),
+        **config.get("agent", {})
     )
     return agent
 
@@ -136,7 +137,7 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
             "endpoint": llm.endpoint
         }
     }
-    config_spec = Path(builtin_config_dir / "rocm" / "config.yaml")
+    config_spec = Path(builtin_config_dir /  "mini.yaml")
     config_path = get_config_path(config_spec)
     logger.info(f"config path {config_path}")
     config = yaml.safe_load(config_path.read_text())

@@ -17,7 +17,9 @@
 #   --dtype bfloat16 \
 #   --trust-remote-code \
 
-SGLANG_USE_AITER=0 python3 -m sglang.launch_server --model zai-org/GLM-4.5-Air --attention-backend triton --tp 4 --trust-remote-code 
+# HIP_VISIBLE_DEVICES=4,5,6,7
+
+ SGLANG_USE_AITER=0 python3 -m sglang.launch_server --model zai-org/GLM-4.5-Air --attention-backend triton --tp 4 --trust-remote-code 
 
 
 

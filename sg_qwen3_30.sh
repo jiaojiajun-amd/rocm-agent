@@ -12,18 +12,17 @@
 # export SGLANG_USE_AITER=0
 
 # python -m sglang.launch_server \
-#   --model-path openai/gpt-oss-120b \
-#   --tp 2 \
-#   --dtype bfloat16 \
-#   --trust-remote-code \
-#   --disable-cuda-graph
-
-# python -m sglang.launch_server \
 #   --model-path Qwen/Qwen3-8B \
 #   --tp 1 \
 #   --dtype bfloat16 \
 #   --trust-remote-code \
-#   --cuda-graph-max-bs 32
+#   --disable-cuda-graph
 
+# # python -m sglang.launch_server \
+# #   --model-path Qwen/Qwen3-8B \
+# #   --tp 1 \
+# #   --dtype bfloat16 \
+# #   --trust-remote-code \
+# #   --cuda-graph-max-bs 32
 
-SGLANG_USE_AITER=0 python3 -m sglang.launch_server --model lmsys/gpt-oss-120b-bf16 --attention-backend triton --tp 4 --port 30001
+HIP_VISIBLE_DEVICES=5 SGLANG_USE_AITER=0 python3 -m sglang.launch_server --model Qwen/Qwen3-30B-A3B --attention-backend triton --tp 1 --trust-remote-code --port 30002
