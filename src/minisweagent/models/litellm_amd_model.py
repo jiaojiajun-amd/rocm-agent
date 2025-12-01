@@ -236,7 +236,7 @@ class LiteLLMAMDModel:
             response = litellm.completion(
                 model=f"hosted_vllm/{model}",
                 messages=messages,
-                api_base="http://localhost:30000/v1",
+                api_base="http://localhost:30001/v1",
                 api_key="dummy",
                 timeout=8000,
                 **merged_kwargs

@@ -312,11 +312,14 @@ def generate_multi(
     max_tokens: int = typer.Option(8000, "--max-tokens", help="Max tokens"),
     workers: int = typer.Option(4, "--workers", "-w", help="Number of parallel workers"),
     samples_per_task: int = typer.Option(1, "--samples-per-task", help="Number of samples to generate per task"),
+    resume: bool = typer.Option(False, "--resume", help="Resume from existing output file (only count successful samples)"),
 ):
     """Generate training data from multiple tasks using multi-threading.
     
     Each task can generate multiple samples (controlled by --samples-per-task) to create
     diverse training data through sampling (requires temperature > 0).
+    
+    Use --resume to continue from existing output file (only successful samples are counted).
     """
     if log_file:
         add_file_handler(log_file)
@@ -341,6 +344,70 @@ def generate_multi(
         dataset = dataset[:max_tasks]
     
     total_tasks = len(dataset)
+    
+    # Load existing progress if resuming
+    existing_examples = []
+    task_success_count = {}
+    if resume and output_file.exists():
+        console.print(f"[yellow]Resuming from existing output file: {output_file}[/yellow]")
+        try:
+            with open(output_file) as f:
+                existing_data = json.load(f)
+            existing_examples = existing_data.get('examples', [])
+            
+            # Count only successful samples per task
+            from collections import defaultdict
+            success_count = defaultdict(int)
+            for ex in existing_examples:
+                if ex.get('success', False):
+                    success_count[ex['instance_id']] += 1
+            task_success_count = dict(success_count)
+            
+            console.print(f"[yellow]Loaded {len(existing_examples)} existing examples[/yellow]")
+            console.print(f"[yellow]Successful: {sum(1 for ex in existing_examples if ex.get('success', False))}[/yellow]")
+            console.print(f"[yellow]Tasks with complete samples ({samples_per_task}): {sum(1 for c in task_success_count.values() if c >= samples_per_task)}[/yellow]")
+        except json.JSONDecodeError as e:
+            console.print(f"[yellow]JSON file is corrupted, attempting to recover progress from log file...[/yellow]")
+            # Try to recover from log file instead
+            import re
+            from collections import defaultdict
+            
+            # Try to find corresponding log file
+            log_file = output_file.parent / f"{output_file.stem}.log"
+            success_count = defaultdict(int)
+            
+            if log_file.exists():
+                console.print(f"[yellow]Reading progress from log file: {log_file}[/yellow]")
+                with open(log_file) as f:
+                    for line in f:
+                        # Look for completion messages with reward
+                        if 'completed with reward:' in line:
+                            match = re.search(r'Task (\S+) completed with reward: ([\d.]+)', line)
+                            if match:
+                                instance_id = match.group(1)
+                                reward = float(match.group(2))
+                                if reward > 0:  # Only count successful samples
+                                    success_count[instance_id] += 1
+                
+                task_success_count = dict(success_count)
+                console.print(f"[yellow]Recovered progress for {len(task_success_count)} tasks from log file[/yellow]")
+                console.print(f"[yellow]Total successful samples: {sum(task_success_count.values())}[/yellow]")
+                
+                # Backup corrupted file
+                backup_file = output_file.parent / f"{output_file.stem}_corrupted_backup.json"
+                console.print(f"[yellow]Backing up corrupted file to: {backup_file}[/yellow]")
+                import shutil
+                shutil.copy(output_file, backup_file)
+            else:
+                console.print(f"[red]Log file not found: {log_file}[/red]")
+                console.print(f"[yellow]Cannot recover progress, starting from scratch[/yellow]")
+            
+            # Don't keep corrupted examples, start fresh but skip completed tasks based on log
+            existing_examples = []
+        except Exception as e:
+            console.print(f"[red]Error loading existing file: {e}[/red]")
+            console.print(f"[red]Starting from scratch[/red]")
+    
     total_samples = total_tasks * samples_per_task
     logger.info(f"Loaded {total_tasks} tasks from {dataset_file}")
     logger.info(f"Will generate {samples_per_task} samples per task, total {total_samples} samples")
@@ -352,6 +419,7 @@ def generate_multi(
     console.print(f"Samples per task: {samples_per_task}")
     console.print(f"Total samples: {total_samples}")
     console.print(f"Workers: {workers}")
+    console.print(f"Resume mode: {resume}")
     console.print(f"Output: {output_file}\n")
     
     docker_server_url = f"http://{docker_server}"
@@ -394,11 +462,20 @@ def generate_multi(
                 error=str(e),
             )
     
-    examples: list[TrainingExample] = []
+    examples: list[TrainingExample] = existing_examples if resume else []
     
     # Create task list: (instance, sample_id) for each sample
+    # Skip already complete samples if resuming
     tasks_to_run = []
     for ins in dataset:
+        instance_id = ins.get('instance_id')
+        current_success = task_success_count.get(instance_id, 0) if resume else 0
+        
+        if current_success >= samples_per_task:
+            logger.info(f"Skipping {instance_id} - already has {current_success} successful samples")
+            continue
+        
+        # Generate only the needed samples
         for sample_id in range(samples_per_task):
             tasks_to_run.append((ins, sample_id))
     

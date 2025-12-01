@@ -38,8 +38,8 @@ from datasets import Dataset as HuggingFaceDataset
 
 import agentlightning as agl
 
-PROJECT_NAME = "rocm-agent-rl"
-EXPERIMENT_NAME = "Qwen/Qwen3-30B-A3B-32k_rocprim_v4_eval_v3"
+PROJECT_NAME = "rocm-agent-original-rl"
+EXPERIMENT_NAME = "Qwen/Qwen3-8B-32k_rocprim_v4_eval_v3"
 DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
@@ -50,7 +50,7 @@ def verl_default_config() -> Dict[str, Any]:
             "use_kl_in_reward": False,
         },
         "data": {
-            "train_batch_size": 8,
+            "train_batch_size": 16,
             "max_prompt_length": 36864,
             "max_response_length": 2048,
         },
@@ -58,15 +58,15 @@ def verl_default_config() -> Dict[str, Any]:
             "rollout": {
                 "tensor_model_parallel_size": 1,
                 "n": 8,
-                "log_prob_micro_batch_size_per_gpu": 1,
+                "log_prob_micro_batch_size_per_gpu": 128,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
-                "gpu_memory_utilization": 0.8,
+                "gpu_memory_utilization": 0.4,
                 "free_cache_engine":False
             },
             "actor": {
-                "ppo_mini_batch_size": 8,
-                "ppo_micro_batch_size_per_gpu": 1,
+                "ppo_mini_batch_size": 16,
+                "ppo_micro_batch_size_per_gpu": 2,
                 "ulysses_sequence_parallel_size": 4,
                 "optim": {"lr": 1e-6},
                 "use_kl_loss": False,
@@ -80,12 +80,12 @@ def verl_default_config() -> Dict[str, Any]:
                 },
             },
             "ref": {
-                "log_prob_micro_batch_size_per_gpu": 1,
+                "log_prob_micro_batch_size_per_gpu": 128,
                 "ulysses_sequence_parallel_size": 4,
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "Qwen/Qwen3-30B-A3B",
+                "path": "Qwen/Qwen3-8B",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },

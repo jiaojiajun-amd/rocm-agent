@@ -1,2 +1,4 @@
 results/
 training_data/
+wandb
+agentops.log
