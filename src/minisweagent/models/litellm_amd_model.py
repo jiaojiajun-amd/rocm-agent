@@ -139,8 +139,8 @@ class LiteLLMAMDModel:
         merged_kwargs.update(self.config.model_kwargs)
         merged_kwargs.update(kwargs)
 
-        print(f"is_amd_api_model={self._is_amd_api_model(model)}")
-        print(f"model is {model}")
+        # print(f"is_amd_api_model={self._is_amd_api_model(model)}")
+        # print(f"model is {model}")
         
         if self._is_amd_api_model(model):
             # Use requests directly for AMD API

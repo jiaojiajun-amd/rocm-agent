@@ -18,12 +18,12 @@ litellm.set_verbose = True
 
 api_key = "c1f7f3ee59064fc0a5fad8c2586f1bd9"
 MODEL_API_URL = "https://llm.amd.com"
-model_id = "gpt-5"
+model_id = ""
 
 # 方式 1: 如果 API 期望的是 /openai/deployments/{model_id}/chat/completions
 litellm_params = {
-    "model": "openai/gpt-5",
-    "api_base": f"{MODEL_API_URL}/openai/deployments/{model_id}/v1",
+    "model": "hosted_vllm/Claude-Sonnet-4.5",
+    "api_base": f" https://llm-api.amd.com/claude3/Claude-Sonnet-4.5/chat/completions",
     "api_key": api_key,
     "extra_headers": {
         'Ocp-Apim-Subscription-Key': api_key

@@ -144,7 +144,7 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
     logger.info(f"config={config}")
     print(config)
 
-    server_ip = "10.67.77.184"
+    server_ip = "10.235.85.27"
 
     docker_server_url = f"http://{server_ip}:9527"
     agent = get_agent(instance, config, docker_server_url, model_config)
