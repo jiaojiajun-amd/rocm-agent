@@ -3,3 +3,4 @@ training_data/
 training_data_bkp/
 wandb
 agentops.log
+training_data_v2/

@@ -26,7 +26,9 @@ class TestObservationCompression:
         """Long observations should trigger compression."""
         model = Mock()
         model.query = Mock(return_value={"content": "This is a summary of the long output."})
+        model.get_template_vars = Mock(return_value={})
         env = Mock()
+        env.get_template_vars = Mock(return_value={})
         
         agent = MiniAgent(model, env, max_observation_tokens=100)
         
@@ -108,6 +110,107 @@ class TestObservationCompression:
         # Ensure no full_content keys remain
         for msg in full_messages:
             assert "full_content" not in msg
+
+
+class TestHistorySummarization:
+    """Test history summarization functionality."""
+    
+    def test_no_summarization_when_disabled(self):
+        """History should not be summarized when max_context_tokens is 0."""
+        model = Mock()
+        model.get_template_vars = Mock(return_value={})
+        env = Mock()
+        env.get_template_vars = Mock(return_value={})
+        
+        agent = MiniAgent(model, env, max_context_tokens=0)
+        
+        for i in range(10):
+            agent.add_message("user", f"Message {i}" * 100)
+        
+        assert len(agent.messages) == 10
+        assert not agent._history_summarized
+    
+    def test_summarization_triggered_when_context_too_long(self):
+        """History should be summarized when context exceeds max_context_tokens."""
+        model = Mock()
+        model.query = Mock(return_value={"content": "Summary of previous conversation."})
+        model.get_template_vars = Mock(return_value={})
+        model.n_calls = 0
+        model.cost = 0
+        env = Mock()
+        env.get_template_vars = Mock(return_value={})
+        
+        agent = MiniAgent(model, env, max_context_tokens=100, keep_recent_messages=2)
+        
+        agent.add_message("system", "System prompt")
+        for i in range(6):
+            agent.add_message("user" if i % 2 == 0 else "assistant", "x" * 100)
+        
+        agent._check_and_summarize_history()
+        
+        assert agent._history_summarized
+        assert model.query.called
+        # Should have: system + summary + 2 recent messages = 4
+        assert len(agent.messages) == 4
+    
+    def test_full_messages_preserved_after_summarization(self):
+        """Full messages should contain all original messages after summarization."""
+        model = Mock()
+        model.query = Mock(return_value={"content": "Summary"})
+        model.get_template_vars = Mock(return_value={})
+        model.n_calls = 0
+        model.cost = 0
+        env = Mock()
+        env.get_template_vars = Mock(return_value={})
+        
+        agent = MiniAgent(model, env, max_context_tokens=100, keep_recent_messages=2)
+        
+        agent.add_message("system", "System")
+        for i in range(5):
+            agent.add_message("user", f"Message{i}" * 50)
+        
+        original_full_count = len(agent.full_messages)
+        agent._check_and_summarize_history()
+        
+        assert len(agent.full_messages) == original_full_count
+        assert len(agent.messages) < original_full_count
+    
+    def test_all_model_calls_tracked(self):
+        """All model calls should be tracked for training data."""
+        model = Mock()
+        model.query = Mock(return_value={"content": "Response"})
+        model.get_template_vars = Mock(return_value={})
+        model.n_calls = 0
+        model.cost = 0
+        env = Mock()
+        env.get_template_vars = Mock(return_value={})
+        
+        agent = MiniAgent(model, env, max_observation_tokens=10)
+        
+        # Trigger observation reasoning
+        agent._reason_about_observation("x" * 500)
+        
+        assert len(agent.all_model_calls) == 1
+        assert agent.all_model_calls[0]["type"] == "observation_reasoning"
+    
+    def test_get_all_model_calls(self):
+        """get_all_model_calls should return a copy of all model calls."""
+        model = Mock()
+        model.query = Mock(return_value={"content": "Response"})
+        model.get_template_vars = Mock(return_value={})
+        env = Mock()
+        env.get_template_vars = Mock(return_value={})
+        
+        agent = MiniAgent(model, env)
+        agent.all_model_calls.append({"type": "test", "data": "value"})
+        
+        calls = agent.get_all_model_calls()
+        
+        assert len(calls) == 1
+        assert calls[0]["type"] == "test"
+        # Ensure it's a copy
+        calls.append({"type": "new"})
+        assert len(agent.all_model_calls) == 1
 
 
 if __name__ == "__main__":
