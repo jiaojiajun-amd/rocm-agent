@@ -342,6 +342,7 @@ async def run_all_tasks(
             
             # Save intermediate results
             if output_file:
+                output_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(output_file, 'w') as f:
                     json.dump(results, f, indent=2)
                 logger.info(f"Saved intermediate results to {output_file}")
@@ -645,6 +646,34 @@ def test_all(
     console.print(f"\n[bold green]✓ All results saved to {output_file}[/bold green]")
 
 
+def generate_simple_report(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Generate a simplified report with key information only."""
+    simple_results = []
+    for r in results:
+        simple_item = {
+            "instance_id": r.get("instance_id"),
+            "success": r.get("success"),
+            "reward": r.get("reward"),
+            "speedup": r.get("speedup"),
+            "exit_status": r.get("exit_status"),
+            "error": r.get("error"),
+            "git_diff": r.get("git_diff"),
+            "model_calls": r.get("model_calls", 0),
+        }
+        eval_info = r.get("evaluation_info", {})
+        if eval_info:
+            meta = eval_info.get("meta", {})
+            simple_item["eval_success"] = meta.get("success")
+            simple_item["eval_reason"] = meta.get("reason")
+            simple_item["eval_error"] = meta.get("error")
+            extracted = eval_info.get("extracted", {})
+            if extracted:
+                simple_item["eval_exit_code"] = extracted.get("exit_code")
+                simple_item["eval_timed_out"] = extracted.get("timed_out")
+        simple_results.append(simple_item)
+    return simple_results
+
+
 @app.command("test_all_multi_thread")
 def test_all_multi_thread(
     dataset_file: Path = typer.Option(
@@ -684,7 +713,13 @@ def test_all_multi_thread(
         "results.json",
         "--output",
         "-o",
-        help="Output file for results (JSON)"
+        help="Output file for full results (JSON)"
+    ),
+    simple_output_file: Optional[Path] = typer.Option(
+        None,
+        "--simple-output",
+        "-s",
+        help="Output file for simplified results (JSON). If not specified, uses output_file with '_simple' suffix"
     ),
     max_tasks: Optional[int] = typer.Option(
         None,
@@ -855,6 +890,7 @@ def test_all_multi_thread(
                 # 保存中间结果（可选）
                 if output_file:
                     try:
+                        output_file.parent.mkdir(parents=True, exist_ok=True)
                         with open(output_file, "w") as f:
                             json.dump(results, f, indent=2)
                         logger.info(f"Saved intermediate results to {output_file} ({len(results)}/{total})")
@@ -909,11 +945,30 @@ def test_all_multi_thread(
     }
 
     try:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(final_output, f, indent=2)
-        console.print(f"\n[bold green]✓ All results saved to {output_file}[/bold green]")
+        console.print(f"\n[bold green]✓ Full results saved to {output_file}[/bold green]")
     except Exception as e:
         logger.error(f"Failed to write final results to {output_file}: {e}")
+
+    # Generate and save simple report
+    if simple_output_file is None:
+        simple_output_file = Path(str(output_file).replace(".json", "_simple.json"))
+    
+    simple_results = generate_simple_report(results)
+    simple_output = {
+        "metadata": final_output["metadata"],
+        "results": simple_results,
+        "summary": final_output["summary"],
+    }
+    try:
+        simple_output_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(simple_output_file, "w") as f:
+            json.dump(simple_output, f, indent=2)
+        console.print(f"[bold green]✓ Simple results saved to {simple_output_file}[/bold green]")
+    except Exception as e:
+        logger.error(f"Failed to write simple results to {simple_output_file}: {e}")
 
 @app.command()
 def test_connection(
@@ -979,6 +1034,68 @@ def test_connection(
         import traceback
         traceback.print_exc()
         raise typer.Exit(code=1)
+
+
+@app.command()
+def generate_simple(
+    results_file: Path = typer.Option(
+        ...,
+        "--results",
+        "-r",
+        help="Path to full results JSON file"
+    ),
+    output_file: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output file for simple results (defaults to input_simple.json)"
+    ),
+):
+    """Generate a simple report from an existing full results file."""
+    console.print(f"[cyan]Loading results from {results_file}...[/cyan]")
+    
+    with open(results_file, 'r') as f:
+        data = json.load(f)
+    
+    # Handle both list format and dict format
+    if isinstance(data, list):
+        results = data
+        metadata = {}
+        summary = {}
+    else:
+        results = data.get("results", data)
+        metadata = data.get("metadata", {})
+        summary = data.get("summary", {})
+    
+    simple_results = generate_simple_report(results)
+    
+    # Compute summary if not present
+    if not summary:
+        successful = sum(1 for r in results if r.get("success"))
+        failed = len(results) - successful
+        total_reward = sum(r.get("reward", 0.0) for r in results)
+        summary = {
+            "successful": successful,
+            "failed": failed,
+            "average_reward": total_reward / len(results) if results else 0,
+            "total_reward": total_reward,
+        }
+    
+    simple_output = {
+        "metadata": metadata,
+        "results": simple_results,
+        "summary": summary,
+    }
+    
+    if output_file is None:
+        output_file = Path(str(results_file).replace(".json", "_simple.json"))
+    
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_file, 'w') as f:
+        json.dump(simple_output, f, indent=2)
+    
+    console.print(f"[bold green]✓ Simple report saved to {output_file}[/bold green]")
+    console.print(f"[cyan]Total tasks: {len(simple_results)}[/cyan]")
 
 
 @app.command()

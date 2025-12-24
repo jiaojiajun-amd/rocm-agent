@@ -1,0 +1,892 @@
+{
+  "metadata": {
+    "mode": "multi-thread",
+    "model_name": "zai-org/GLM-4.6",
+    "dataset_file": "/home/jiajjiao/rocm-agent/data/rocprim_v4.json",
+    "total_tasks": 58,
+    "config_file": "/home/jiajjiao/rocm-agent/src/minisweagent/config/rocm/config_amd.yaml",
+    "temperature": 1.0,
+    "max_tokens": 8000,
+    "workers": 8
+  },
+  "results": [
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_adjacent_difference_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202853 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202853 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_scan_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_adjacent_difference_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_adjacent_find_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_batch_memcpy_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_binary_search_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_find_end_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_find_first_of_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_histogram_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_memory_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_inplace_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_nth_element_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_partial_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_partial_sort_copy_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_partition_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_radix_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_reduce_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_reduce_by_key_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_run_length_encode_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_by_key_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_search_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_search_n_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_radix_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_reduce_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_scan_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_select_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_transform_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_exchange_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_reduce_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_scan_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_load_store_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_shuffle_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_load_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_warp_warp_store_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_config_dispatch_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_iterator_predicate_iterator_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_radix_sort_block_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_radix_sort_onesweep_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_sort_block_merge_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_merge_sort_block_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_deterministic_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_scan_by_key_deterministic_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_reduce_by_key_deterministic_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_run_length_encode_non_trivial_runs_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_segmented_radix_sort_pairs_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_device_device_transform_pointer_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "500 Server Error: Internal Server Error for url: http://10.67.77.184:9527/start"
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_exchange_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202835 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202835 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_histogram_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_radix_rank_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202853 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202853 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_discontinuity_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_reduce_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202759 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202759 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_run_length_decode_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202852 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    },
+    {
+      "instance_id": "rocprim_rocprim_include_rocprim_block_block_radix_sort_hpp",
+      "exit_status": "error",
+      "reward": 0.0,
+      "success": false,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202850 tokens) is longer than the model's context length (202752 tokens).",
+      "model_calls": 0,
+      "model_cost": 0.0,
+      "evaluation_info": {
+        "meta": {
+          "success": false,
+          "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - The input (202850 tokens) is longer than the model's context length (202752 tokens)."
+        }
+      }
+    }
+  ],
+  "summary": {
+    "successful": 0,
+    "failed": 58,
+    "average_reward": 0.0,
+    "total_reward": 0.0,
+    "total_model_calls": 0,
+    "total_cost": 0.0
+  }
+}
