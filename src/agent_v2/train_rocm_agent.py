@@ -39,7 +39,7 @@ from datasets import Dataset as HuggingFaceDataset
 import agentlightning as agl
 
 PROJECT_NAME = "rocm-agent-original-rl"
-EXPERIMENT_NAME = "Qwen/Qwen3-8B-32k_rocprim_v4_eval_v3"
+EXPERIMENT_NAME = "jsonjiao/qwen3-rocm-sft-v2-2000step-32k_rocprim_v4_eval_v3"
 DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
@@ -58,7 +58,7 @@ def verl_default_config() -> Dict[str, Any]:
             "rollout": {
                 "tensor_model_parallel_size": 1,
                 "n": 8,
-                "log_prob_micro_batch_size_per_gpu": 32,
+                "log_prob_micro_batch_size_per_gpu": 4,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
                 "gpu_memory_utilization": 0.4,
@@ -66,7 +66,7 @@ def verl_default_config() -> Dict[str, Any]:
             },
             "actor": {
                 "ppo_mini_batch_size": 16,
-                "ppo_micro_batch_size_per_gpu": 16,
+                "ppo_micro_batch_size_per_gpu": 8,
                 "ulysses_sequence_parallel_size": 2,
                 "optim": {"lr": 1e-6},
                 "use_kl_loss": False,
@@ -80,19 +80,19 @@ def verl_default_config() -> Dict[str, Any]:
                 },
             },
             "ref": {
-                "log_prob_micro_batch_size_per_gpu": 32,
+                "log_prob_micro_batch_size_per_gpu": 4,
                 "ulysses_sequence_parallel_size": 2,
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "Qwen/Qwen3-8B",
+                "path": "jsonjiao/qwen3-rocm-sft-v2-2000step",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },
         },
         "trainer": {
             "n_gpus_per_node": 8,
-            "val_before_train": True,
+            "val_before_train": False,
             "critic_warmup": 0,
             "logger": ["console", "wandb"],
             "project_name": PROJECT_NAME,

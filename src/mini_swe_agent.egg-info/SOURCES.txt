@@ -13,9 +13,11 @@ src/minisweagent/py.typed
 src/minisweagent/agents/__init__.py
 src/minisweagent/agents/default.py
 src/minisweagent/agents/default_remote.py
+src/minisweagent/agents/example_compression_usage.py
 src/minisweagent/agents/interactive.py
 src/minisweagent/agents/interactive_textual.py
 src/minisweagent/agents/mini.py
+src/minisweagent/agents/test_mini_compression.py
 src/minisweagent/config/README.md
 src/minisweagent/config/__init__.py
 src/minisweagent/config/default.yaml
