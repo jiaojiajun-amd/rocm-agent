@@ -147,24 +147,33 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
     server_ip = "10.235.85.27"
 
     docker_server_url = f"http://{server_ip}:9527"
-    agent = get_agent(instance, config, docker_server_url, model_config)
-
-    problem = instance["problem_statement"]
-    exit_status, result = agent.run(problem)
-
-    container_id = agent.env.container_id
-
-    dataset_name = task.get("dataset_name", "SWE-bench/SWE-bench_Lite")
-    split = task.get("split", "test")
     eval_server_url = f"http://{server_ip}:9528"
+    agent = None
+    try:
+        agent = get_agent(instance, config, docker_server_url, model_config)
+        container_id = agent.env.container_id
 
-    logger.info("agent rollout successfully, start to get reward")
+        problem = instance["problem_statement"]
+        exit_status, result = agent.run(problem, instance_id=instance_id, eval_server_url=eval_server_url, container_id=container_id)
 
-    reward, speedup = await evaluate(exit_status, result, container_id, instance_id, dataset_name, split, eval_server_url)
-    
-    logger.info(f"computed reward is {reward}")
+        dataset_name = task.get("dataset_name", "SWE-bench/SWE-bench_Lite")
+        split = task.get("split", "test")
 
-    agl.emit_reward(float(reward))
+        logger.info("agent rollout successfully, start to get reward")
+
+        reward, speedup = await evaluate(exit_status, result, container_id, instance_id, dataset_name, split, eval_server_url)
+        
+        logger.info(f"computed reward is {reward}")
+
+        agl.emit_reward(float(reward))
+    finally:
+        # Manually cleanup docker container after task completes
+        if agent and hasattr(agent, "env") and hasattr(agent.env, "cleanup"):
+            try:
+                agent.env.cleanup()
+                logger.info(f"Container cleaned up for {instance_id}")
+            except Exception as e:
+                logger.warning(f"Failed to cleanup container for {instance_id}: {e}")
 
 
 

@@ -35,16 +35,21 @@ agent:
 
     ## Evaluation API
 
-    <important>Do NOT run benchmarks directly. Use this API to evaluate your optimization. Save the result to a file and inspect it later - do NOT retry due to output length.</important>
+    <important>Do NOT run benchmarks directly. Use this API to evaluate your optimization.</important>
     The evaluation server will build and run the benchmark for you, returning reward and speedup metrics.
+    The response may be long but will be automatically summarized - do NOT retry due to output length.
 
     ```bash
     curl -s -X POST "{{eval_server_url}}/evaluate_v3" \
       -H "Content-Type: application/json" \
-      -d '{"instance_id": "{{instance_id}}", "container_id": "{{container_id}}", "mode": "benchmark"}' > /tmp/eval_result.json && cat /tmp/eval_result.json
+      -d '{"instance_id": "{{instance_id}}", "container_id": "{{container_id}}", "mode": "benchmark"}'
     ```
 
-    Response fields: `success`, `reward` , `speedup`, `error`
+    Response fields:
+    - `success`: whether evaluation succeeded
+    - `reward`: optimization reward (>0 means improvement)
+    - `speedup`: performance speedup ratio
+    - `error`: error message if failed
 
     ## Important Rules
 

@@ -303,16 +303,15 @@ class SweAgent(LitAgent):
         server_ip = "10.67.77.184"
 
         docker_server_url = f"http://{server_ip}:9527"
+        eval_server_url = f"http://{server_ip}:9528"
         agent = get_agent(instance, config, docker_server_url, model_config)
+        container_id = agent.env.container_id
 
         problem = instance["problem_statement"]
-        exit_status, result = agent.run(problem)
-
-        container_id = agent.env.container_id
+        exit_status, result = agent.run(problem, instance_id=instance_id, eval_server_url=eval_server_url, container_id=container_id)
 
         dataset_name = task.get("dataset_name", "SWE-bench/SWE-bench_Lite")
         split = task.get("split", "test")
-        eval_server_url = f"http://{server_ip}:9528"
 
         logger.info("agent rollout successfully, start to get reward")
 

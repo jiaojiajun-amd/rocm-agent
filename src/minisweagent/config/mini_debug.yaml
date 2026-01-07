@@ -1,0 +1,36 @@
+agent:
+  system_template: |
+    You must output EXACTLY this and nothing else:
+    
+    ```bash
+    echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+    ```
+  instance_template: |
+    ```bash
+    echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+    ```
+  action_observation_template: |
+    <returncode>{{output.returncode}}</returncode>
+    <output>
+    {{ output.output -}}
+    </output>
+  format_error_template: |
+    Please provide exactly one bash command in triple backticks.
+  observation_reasoning_template: ""
+  max_observation_tokens: 10000
+  max_context_tokens: 0
+  keep_recent_messages: 4
+  step_limit: 100
+  cost_limit: 0
+
+environment:
+  cwd: "/"
+  timeout: 30
+  env:
+    PAGER: cat
+  environment_class: docker_remote
+
+model:
+  model_kwargs:
+    temperature: 0.0
+
