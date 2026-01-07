@@ -45,71 +45,131 @@ class TrainingExample:
 
 
 def extract_sft_conversation(all_model_calls: list[dict]) -> dict:
-    """Extract conversations from model calls, including auxiliary calls.
+    """Extract conversations from model calls, organized by sessions.
     
-    Returns a dict with:
-    - system: system prompt (from first call)
-    - turns: list of main conversation turns
-    - auxiliary_turns: list of observation_reasoning and history_summarization turns
+    Structure after history_summarization:
+    - messages = [system, initial_prompt, summary, recent_msgs...]
+    
+    Each session has:
+    - system: system prompt
+    - initial_prompt: the original task description (preserved across sessions)
+    - context: summary from previous session (if any)
+    - turns: list of (user, assistant) pairs
+    - observation_reasoning_calls: list of observation reasoning calls
     """
     if not all_model_calls:
-        return {"system": "", "turns": [], "auxiliary_turns": []}
+        return {"sessions": []}
     
-    main_queries = [c for c in all_model_calls if c.get("type") == "main_query"]
-    auxiliary_calls = [c for c in all_model_calls if c.get("type") in ["observation_reasoning", "history_summarization"]]
-    
-    # Extract system prompt from first main query
+    # Extract system prompt and initial prompt from first main query
     system_prompt = ""
-    if main_queries:
-        first_messages = main_queries[0].get("messages", [])
-        for msg in first_messages:
-            if msg.get("role") == "system":
-                system_prompt = msg.get("content", "")
-                break
+    initial_prompt = ""
+    for call in all_model_calls:
+        if call.get("type") == "main_query":
+            user_msgs = []
+            for msg in call.get("messages", []):
+                if msg.get("role") == "system":
+                    system_prompt = msg.get("content", "")
+                elif msg.get("role") == "user":
+                    user_msgs.append(msg.get("content", ""))
+            # First user message is the initial prompt (task description)
+            if user_msgs:
+                initial_prompt = user_msgs[0]
+            break
     
-    # Build main conversation turns
-    turns = []
-    for call in main_queries:
-        messages = call.get("messages", [])
-        response = call.get("response", {})
-        user_input = ""
-        for msg in reversed(messages):
-            if msg.get("role") == "user":
-                user_input = msg.get("content", "")
-                break
-        assistant_output = response.get("content", "")
-        if user_input and assistant_output:
-            turns.append({"user": user_input, "assistant": assistant_output})
+    sessions = []
+    current_session = {
+        "session_id": 0,
+        "system": system_prompt,
+        "initial_prompt": initial_prompt,
+        "context": None,
+        "turns": [],
+        "observation_reasoning_calls": []
+    }
+    turn_counter = 0
+    is_first_turn_of_session = True
     
-    # Build auxiliary turns (observation/history summarization)
-    auxiliary_turns = []
-    for call in auxiliary_calls:
+    for call in all_model_calls:
         call_type = call.get("type", "")
         messages = call.get("messages", [])
         response = call.get("response", {})
         
-        aux_system = ""
-        aux_user = ""
-        for msg in messages:
-            if msg.get("role") == "system":
-                aux_system = msg.get("content", "")
-            elif msg.get("role") == "user":
-                aux_user = msg.get("content", "")
+        if call_type == "main_query":
+            # Extract user messages from this call
+            user_msgs = [msg.get("content", "") for msg in messages if msg.get("role") == "user"]
+            
+            # Find the actual observation (last user message that's not summary or initial prompt)
+            user_input = ""
+            for content in reversed(user_msgs):
+                if "<conversation_summary>" not in content and content != initial_prompt:
+                    user_input = content
+                    break
+            
+            # Check for context (summary) in this session's first turn
+            if is_first_turn_of_session and current_session["context"] is None:
+                for content in user_msgs:
+                    if "<conversation_summary>" in content:
+                        current_session["context"] = content
+                        break
+                is_first_turn_of_session = False
+            
+            assistant_output = response.get("content", "")
+            if user_input and assistant_output:
+                current_session["turns"].append({
+                    "turn_id": turn_counter,
+                    "user": user_input,
+                    "assistant": assistant_output
+                })
+                turn_counter += 1
         
-        aux_output = response.get("content", "")
-        if aux_user and aux_output:
-            auxiliary_turns.append({
-                "type": call_type,
-                "system": aux_system,
-                "user": aux_user,
-                "assistant": aux_output,
+        elif call_type == "observation_reasoning":
+            aux_user = ""
+            for msg in messages:
+                if msg.get("role") == "user":
+                    aux_user = msg.get("content", "")
+            aux_output = response.get("content", "")
+            
+            if aux_user and aux_output:
+                current_session["observation_reasoning_calls"].append({
+                    "turn_id": turn_counter,
+                    "input": aux_user,
+                    "output": aux_output
+                })
+        
+        elif call_type == "history_summarization":
+            # End current session and save it
+            if current_session["turns"]:
+                sessions.append(current_session)
+            
+            # Add the summarization call as a separate entry
+            summary_input = ""
+            for msg in messages:
+                if msg.get("role") == "user":
+                    summary_input = msg.get("content", "")
+            summary_output = response.get("content", "")
+            
+            sessions.append({
+                "type": "history_summarization",
+                "input": summary_input,
+                "output": summary_output
             })
+            
+            # Start a new session with preserved initial_prompt
+            current_session = {
+                "session_id": len([s for s in sessions if "session_id" in s]),
+                "system": system_prompt,
+                "initial_prompt": initial_prompt,
+                "context": None,  # Will be filled by next main_query
+                "turns": [],
+                "observation_reasoning_calls": []
+            }
+            turn_counter = 0
+            is_first_turn_of_session = True
     
-    return {
-        "system": system_prompt,
-        "turns": turns,
-        "auxiliary_turns": auxiliary_turns,
-    }
+    # Don't forget the last session
+    if current_session["turns"]:
+        sessions.append(current_session)
+    
+    return {"sessions": sessions}
 
 
 def get_rocm_environment(config: dict, instance: dict, server_url: str) -> RemoteDockerEnvironment:
@@ -143,7 +203,8 @@ async def generate_single_example(
     try:
         env = get_rocm_environment(config, instance, docker_server_url)
         agent = MiniAgent(model=model, env=env, **config.get("agent", {}))
-        exit_status, result = agent.run(instance["problem_statement"])
+        container_id = agent.env.container_id
+        exit_status, result = agent.run(instance["problem_statement"], instance_id=instance_id, eval_server_url=eval_server_url, container_id=container_id)
         
         reward, speedup, evaluation_info = await evaluate_info(
             exit_status, result, agent.env.container_id, instance_id,
@@ -172,44 +233,67 @@ async def generate_single_example(
         logger.exception(f"Error generating data for {instance_id}_repeat{repeat_id}: {e}")
         return TrainingExample(
             instance_id=instance_id, repeat_id=repeat_id, problem_statement=instance.get("problem_statement", ""),
-            conversation={"system": "", "turns": []}, git_diff=None, exit_status="error", reward=0.0, speedup=0.0, success=False,
+            conversation={"sessions": []}, git_diff=None, exit_status="error", reward=0.0, speedup=0.0, success=False,
             model_calls=0, evaluation_info={"meta": {"success": False, "error": str(e)}}, error=str(e),
         )
 
 
 def save_sft_data(examples: list[TrainingExample], output_path: Path, metadata: dict):
-    """Save SFT training data in conversation format (more efficient, no redundant context)."""
+    """Save SFT training data organized by sessions.
+    
+    Structure:
+    - Each instance has multiple sessions (separated by history_summarization)
+    - Each session has: system, context, turns, observation_reasoning_calls
+    - history_summarization entries are inline between sessions
+    """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
-    # Each example is one conversation with multiple turns
-    conversations = []
+    instances = []
+    total_sessions = 0
     total_turns = 0
-    total_auxiliary = 0
+    total_summaries = 0
+    total_observation_reasoning = 0
+    
     for ex in examples:
         conv = ex.conversation
-        if not conv.get("turns") and not conv.get("auxiliary_turns"):
+        sessions = conv.get("sessions", [])
+        if not sessions:
             continue
-        conversations.append({
+        
+        # Count statistics
+        num_main_sessions = sum(1 for s in sessions if "session_id" in s)
+        num_summaries = sum(1 for s in sessions if s.get("type") == "history_summarization")
+        num_turns = sum(len(s.get("turns", [])) for s in sessions if "session_id" in s)
+        num_obs_reasoning = sum(len(s.get("observation_reasoning_calls", [])) for s in sessions if "session_id" in s)
+        
+        instances.append({
             "instance_id": ex.instance_id,
             "repeat_id": ex.repeat_id,
-            "system": conv.get("system", ""),
-            "turns": conv.get("turns", []),
-            "auxiliary_turns": conv.get("auxiliary_turns", []),
+            "sessions": sessions,
             "reward": ex.reward,
             "success": ex.success,
-            "num_turns": len(conv.get("turns", [])),
-            "num_auxiliary": len(conv.get("auxiliary_turns", [])),
+            "stats": {
+                "num_sessions": num_main_sessions,
+                "num_turns": num_turns,
+                "num_history_summarizations": num_summaries,
+                "num_observation_reasoning": num_obs_reasoning
+            }
         })
-        total_turns += len(conv.get("turns", []))
-        total_auxiliary += len(conv.get("auxiliary_turns", []))
+        
+        total_sessions += num_main_sessions
+        total_turns += num_turns
+        total_summaries += num_summaries
+        total_observation_reasoning += num_obs_reasoning
     
     data = {
         "metadata": metadata,
-        "conversations": conversations,
+        "instances": instances,
         "summary": {
-            "total_conversations": len(conversations),
+            "total_instances": len(instances),
+            "total_sessions": total_sessions,
             "total_turns": total_turns,
-            "total_auxiliary_turns": total_auxiliary,
+            "total_history_summarizations": total_summaries,
+            "total_observation_reasoning": total_observation_reasoning,
             "successful": sum(1 for ex in examples if ex.success),
             "failed": sum(1 for ex in examples if not ex.success),
             "average_reward": sum(ex.reward for ex in examples) / len(examples) if examples else 0,
@@ -350,13 +434,27 @@ def main(
                 save_trajectory_data(examples, trajectory_dir, generation_metadata)
     
     successful = sum(1 for ex in examples if ex.success)
-    total_turns = sum(len(ex.conversation.get("turns", [])) for ex in examples)
+    
+    # Count statistics from new session-based structure
+    total_sessions = 0
+    total_turns = 0
+    total_summaries = 0
+    for ex in examples:
+        sessions = ex.conversation.get("sessions", [])
+        for s in sessions:
+            if "session_id" in s:
+                total_sessions += 1
+                total_turns += len(s.get("turns", []))
+            elif s.get("type") == "history_summarization":
+                total_summaries += 1
     
     table = Table(title="Training Data Generation Summary", show_header=True, header_style="bold magenta")
     table.add_column("Metric", style="cyan")
     table.add_column("Value", style="green")
-    table.add_row("Total Conversations", str(len(examples)))
+    table.add_row("Total Instances", str(len(examples)))
+    table.add_row("Total Sessions", str(total_sessions))
     table.add_row("Total Turns", str(total_turns))
+    table.add_row("Total History Summarizations", str(total_summaries))
     table.add_row("Successful", f"{successful} ({successful/len(examples)*100:.1f}%)")
     table.add_row("Failed", f"{len(examples) - successful} ({(len(examples) - successful)/len(examples)*100:.1f}%)")
     table.add_row("Average Reward", f"{sum(ex.reward for ex in examples) / len(examples):.4f}")

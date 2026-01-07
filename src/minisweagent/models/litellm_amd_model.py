@@ -99,7 +99,7 @@ class LiteLLMAMDModel:
             "gpt-4.1", "gpt-4.1-mini", "o1", "o1-mini", "o1-preview", "o4-mini", "gpt-4o",
             "claude-3.5", "claude-3.7", "gemini-3-pro", "gemini-2.5-pro", "gemini-2.5-flash",
             "DeepSeek-R1", "DeepSeek-R1-Distill-Llama-8B", "DeepSeek-R1-Distill-Qwen-14B",
-            "Claude-Sonnet-4.5"
+            "Claude-Sonnet-4.5", "Claude-Opus-4.5"
         ]
 
     @retry(
@@ -182,7 +182,7 @@ class LiteLLMAMDModel:
         elif model in ["gemini-3-pro", "gemini-2.5-pro", "gemini-2.5-flash"]:
             server = "https://llm-api.amd.com/vertex/gemini/deployments"
             body["max_tokens"] = body["max_completion_tokens"]
-        elif model in ["claude-3.5", "claude-3.7", "claude-4", "claude-4.5", "Claude-Sonnet-4.5"]:
+        elif model in ["claude-3.5", "claude-3.7", "claude-4", "claude-4.5", "Claude-Sonnet-4.5", "Claude-Opus-4.5"]:
             server = "https://llm-api.amd.com/claude3"
             body['max_completion_tokens'] = min(body.get('max_completion_tokens', 8192), 8192)
             body["max_tokens"] = body["max_completion_tokens"]
@@ -204,7 +204,7 @@ class LiteLLMAMDModel:
             # Extract content based on response format
             if model in ["gemini-3-pro", "gemini-2.5-pro", "gemini-2.5-flash"]:
                 content = response_json['candidates'][0]['content']['parts'][0]['text']
-            elif model in ["claude-3.5", "claude-3.7", "claude-4", "claude-4.5", "Claude-Sonnet-4.5"]:
+            elif model in ["claude-3.5", "claude-3.7", "claude-4", "claude-4.5", "Claude-Sonnet-4.5","Claude-Opus-4.5"]:
                 content = response_json['content'][0]['text']
             else:
                 content = response_json['choices'][0]['message']['content']
@@ -237,7 +237,7 @@ class LiteLLMAMDModel:
             response = litellm.completion(
                 model=f"hosted_vllm/{model}",
                 messages=messages,
-                api_base="http://localhost:30001/v1",
+                api_base="http://localhost:30000/v1",
                 api_key="dummy",
                 timeout=8000,
                 **merged_kwargs

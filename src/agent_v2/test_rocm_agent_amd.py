@@ -135,15 +135,17 @@ async def run_single_task(
     """Run a single task and return results."""
     instance_id = instance["instance_id"]
     logger.info(f"Running task: {instance_id}")
+    agent = None
     
     try:
         agent = get_agent(instance, config, docker_server_url, model)
         problem = instance["problem_statement"]
         
         # Run the agent
-        logger.info(f"Starting agent execution for {instance_id}")
-        exit_status, result = agent.run(problem)
         container_id = agent.env.container_id
+        logger.info(f"Starting agent execution for {instance_id}")
+        exit_status, result = agent.run(problem, instance_id=instance_id, eval_server_url=eval_server_url, container_id=container_id)
+        actions = getattr(agent, "actions", [])
         
         logger.info(f"Agent execution completed for {instance_id}, exit_status: {exit_status}")
         
@@ -180,6 +182,7 @@ async def run_single_task(
             "model_calls": model_stats.get("n_model_calls", 0),
             "model_cost": model_stats.get("model_cost", 0.0),
             "git_diff": git_diff,
+            "actions": actions,
         }
         
     except Exception as e:
@@ -197,6 +200,14 @@ async def run_single_task(
             "model_cost": 0.0,
             "git_diff": None,
         }
+    finally:
+        # Manually cleanup docker container after task completes
+        if agent and hasattr(agent, "env") and hasattr(agent.env, "cleanup"):
+            try:
+                agent.env.cleanup()
+                logger.info(f"Container cleaned up for {instance_id}")
+            except Exception as e:
+                logger.warning(f"Failed to cleanup container for {instance_id}: {e}")
 
 
 from typing import Any, Dict
@@ -211,15 +222,17 @@ async def run_single_task_with_evaluation_info(
     """Run a single task and return results."""
     instance_id = instance["instance_id"]
     logger.info(f"Running task: {instance_id}")
+    agent = None
 
     try:
         agent = get_agent(instance, config, docker_server_url, model)
         problem = instance["problem_statement"]
 
         # Run the agent
-        logger.info(f"Starting agent execution for {instance_id}")
-        exit_status, result = agent.run(problem)
         container_id = agent.env.container_id
+        logger.info(f"Starting agent execution for {instance_id}")
+        exit_status, result = agent.run(problem, instance_id=instance_id, eval_server_url=eval_server_url, container_id=container_id)
+        actions = getattr(agent, "actions", [])
 
         logger.info(f"Agent execution completed for {instance_id}, exit_status: {exit_status}")
 
@@ -256,7 +269,7 @@ async def run_single_task_with_evaluation_info(
             "model_calls": model_stats.get("n_model_calls", 0),
             "model_cost": model_stats.get("model_cost", 0.0),
             "git_diff": git_diff,
-            # 新增：详细评估信息
+            "actions": actions,
             "evaluation_info": evaluation_info,
         }
 
@@ -274,7 +287,7 @@ async def run_single_task_with_evaluation_info(
             "model_calls": 0,
             "model_cost": 0.0,
             "git_diff": None,
-            # 保持结构一致，错误情况下也返回 evaluation_info 的占位
+            "actions": [],
             "evaluation_info": {
                 "meta": {
                     "success": False,
@@ -282,6 +295,14 @@ async def run_single_task_with_evaluation_info(
                 }
             },
         }
+    finally:
+        # Manually cleanup docker container after task completes
+        if agent and hasattr(agent, "env") and hasattr(agent.env, "cleanup"):
+            try:
+                agent.env.cleanup()
+                logger.info(f"Container cleaned up for {instance_id}")
+            except Exception as e:
+                logger.warning(f"Failed to cleanup container for {instance_id}: {e}")
 
 
 async def run_all_tasks(
@@ -709,17 +730,11 @@ def test_all_multi_thread(
         "-c",
         help="Custom config file (defaults to builtin rocm config)"
     ),
-    output_file: Path = typer.Option(
-        "results.json",
-        "--output",
+    output_dir: Path = typer.Option(
+        ...,
+        "--output-dir",
         "-o",
-        help="Output file for full results (JSON)"
-    ),
-    simple_output_file: Optional[Path] = typer.Option(
-        None,
-        "--simple-output",
-        "-s",
-        help="Output file for simplified results (JSON). If not specified, uses output_file with '_simple' suffix"
+        help="Directory to write outputs (output.json, simple_output.json, actions.json)"
     ),
     max_tasks: Optional[int] = typer.Option(
         None,
@@ -778,7 +793,7 @@ def test_all_multi_thread(
     console.print(f"Dataset: {dataset_file}")
     if max_tasks:
         console.print(f"Max tasks: {max_tasks}")
-    console.print(f"Output: {output_file}")
+    console.print(f"Output dir: {output_dir}")
     console.print(f"Workers: {workers}\n")
 
     docker_server_url = f"http://{docker_server}"
@@ -794,6 +809,10 @@ def test_all_multi_thread(
 
     total = len(dataset)
     logger.info(f"Loaded {total} tasks from {dataset_file}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / "output.json"
+    simple_output_file = output_dir / "simple_output.json"
+    actions_output_file = output_dir / "actions.json"
 
     # 子线程 worker：每个线程里创建自己的模型实例，并执行单个任务
     def worker(instance: Dict[str, Any]) -> Dict[str, Any]:
@@ -888,14 +907,12 @@ def test_all_multi_thread(
                 progress.advance(ptask)
 
                 # 保存中间结果（可选）
-                if output_file:
-                    try:
-                        output_file.parent.mkdir(parents=True, exist_ok=True)
-                        with open(output_file, "w") as f:
-                            json.dump(results, f, indent=2)
-                        logger.info(f"Saved intermediate results to {output_file} ({len(results)}/{total})")
-                    except Exception as e:
-                        logger.warning(f"Failed to save intermediate results: {e}")
+                try:
+                    with open(output_file, "w") as f:
+                        json.dump(results, f, indent=2)
+                    logger.info(f"Saved intermediate results to {output_file} ({len(results)}/{total})")
+                except Exception as e:
+                    logger.warning(f"Failed to save intermediate results: {e}")
 
     # 汇总统计
     successful = sum(1 for r in results if r.get("success"))
@@ -945,7 +962,6 @@ def test_all_multi_thread(
     }
 
     try:
-        output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(final_output, f, indent=2)
         console.print(f"\n[bold green]✓ Full results saved to {output_file}[/bold green]")
@@ -953,9 +969,6 @@ def test_all_multi_thread(
         logger.error(f"Failed to write final results to {output_file}: {e}")
 
     # Generate and save simple report
-    if simple_output_file is None:
-        simple_output_file = Path(str(output_file).replace(".json", "_simple.json"))
-    
     simple_results = generate_simple_report(results)
     simple_output = {
         "metadata": final_output["metadata"],
@@ -963,12 +976,23 @@ def test_all_multi_thread(
         "summary": final_output["summary"],
     }
     try:
-        simple_output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(simple_output_file, "w") as f:
             json.dump(simple_output, f, indent=2)
         console.print(f"[bold green]✓ Simple results saved to {simple_output_file}[/bold green]")
     except Exception as e:
         logger.error(f"Failed to write simple results to {simple_output_file}: {e}")
+
+    # Save action sequences separately
+    try:
+        actions_payload = [
+            {"instance_id": r.get("instance_id"), "actions": r.get("actions", [])}
+            for r in results
+        ]
+        with open(actions_output_file, "w") as f:
+            json.dump({"metadata": final_output["metadata"], "actions": actions_payload}, f, indent=2)
+        console.print(f"[bold green]✓ Action sequences saved to {actions_output_file}[/bold green]")
+    except Exception as e:
+        logger.error(f"Failed to write action sequences to {actions_output_file}: {e}")
 
 @app.command()
 def test_connection(

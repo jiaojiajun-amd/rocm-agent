@@ -16,7 +16,7 @@ class RemoteDockerEnvironmentConfig:
     timeout: int = 1800  # 默认 1800 秒（30 分钟）用于长时间运行的命令
     executable: str = os.getenv("MSWEA_DOCKER_EXECUTABLE", "docker")
     run_args: list[str] = field(default_factory=lambda: ["--rm"])
-    container_timeout: str = "2h"
+    container_timeout: str = "6h"
     pull_timeout: int = 400
     max_retries: int = 3  # 仅用于启动容器
     retry_delay: int = 5
@@ -171,7 +171,9 @@ class RemoteDockerEnvironment:
 
     def __del__(self):
         """Cleanup container when object is destroyed."""
-        self.cleanup()
+        # Disabled: In multi-threaded environments, __del__ may trigger prematurely
+        # causing "No such container" errors. Containers will be cleaned up by timeout.
+        pass
 
 # --- 使用示例 ---
 if __name__ == '__main__':

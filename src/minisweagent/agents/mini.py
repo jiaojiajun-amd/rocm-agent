@@ -2,6 +2,7 @@
 
 import re
 import subprocess
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
@@ -83,10 +84,12 @@ class MiniAgent:
         self.messages: list[dict] = []  # Working messages (may be summarized)
         self.full_messages: list[dict] = []  # Complete unsummarized history for training
         self.all_model_calls: list[dict] = []  # Track all model calls for training data
+        self.actions: list[str] = []  # Executed action strings
         self.model = model
         self.env = env
         self.extra_template_vars = {}
         self._history_summarized = False  # Track if history has been summarized
+        self._last_summary_msg_count = 0  # Track message count at last summary
 
     def render_template(self, template: str, **kwargs) -> str:
         template_vars = asdict(self.config) | self.env.get_template_vars() | self.model.get_template_vars()
@@ -123,15 +126,25 @@ class MiniAgent:
         self.messages = []
         self.full_messages = []
         self.all_model_calls = []
+        self.actions = []
         self._history_summarized = False
+        self._last_summary_msg_count = 0
+        self._start_time = time.time()
+        self._step_count = 0
         self.add_message("system", self.render_template(self.config.system_template))
         self.add_message("user", self.render_template(self.config.instance_template))
         while True:
+            self._step_count += 1
+            elapsed = time.time() - self._start_time
+            print(f"[DEBUG run] Step {self._step_count}, elapsed time: {elapsed:.1f}s ({elapsed/60:.1f}min)")
             try:
                 self.step()
             except NonTerminatingException as e:
+                print(f"[DEBUG run] NonTerminatingException: {type(e).__name__}")
                 self.add_message("user", str(e))
             except TerminatingException as e:
+                elapsed = time.time() - self._start_time
+                print(f"[DEBUG run] TerminatingException: {type(e).__name__}, exiting! Total time: {elapsed:.1f}s ({elapsed/60:.1f}min)")
                 self.add_message("user", str(e))
                 return type(e).__name__, str(e)
 
@@ -158,7 +171,9 @@ class MiniAgent:
 
     def get_observation(self, response: dict) -> dict:
         """Execute the action and return the observation."""
+        print(f"[DEBUG get_observation] About to execute action")
         output = self.execute_action(self.parse_action(response))
+        print(f"[DEBUG get_observation] execute_action returned (should not reach here if Submitted)")
         observation = self.render_template(self.config.action_observation_template, output=output)
         
         # Check if observation is too long
@@ -200,28 +215,59 @@ class MiniAgent:
         return sum(self.count_tokens(m.get("content", "")) for m in self.messages)
 
     def _check_and_summarize_history(self):
-        """Check context length and summarize history if needed."""
+        """Check context length and summarize history if needed.
+        
+        After summarization, messages become:
+        [system_msg, initial_prompt_msg, summary_msg, recent_msgs...]
+        
+        This ensures:
+        1. System prompt is preserved
+        2. Initial task description (instance_template) is preserved  
+        3. Summary provides context of what was done
+        4. Recent messages provide immediate context
+        """
         current_tokens = self._estimate_context_tokens()
+        print(f"[DEBUG summarize] current_tokens={current_tokens}, max={self.config.max_context_tokens}")
         if current_tokens <= self.config.max_context_tokens:
             return
+        print(f"[DEBUG summarize] TRIGGERED! messages count={len(self.messages)}")
         
-        # Keep system message and recent messages, summarize the middle
+        # Keep system message, initial prompt, and recent messages
         keep_recent = self.config.keep_recent_messages
-        if len(self.messages) <= keep_recent + 1:  # +1 for system message
+        # Need at least: system + initial_prompt + some messages to summarize + recent
+        # Use keep_recent + 4 to ensure enough NEW messages since last summary
+        if len(self.messages) <= keep_recent + 4:
             return  # Not enough messages to summarize
         
-        # Extract messages to summarize (skip system, keep recent)
+        # Extract messages
         system_msg = self.messages[0]
-        messages_to_summarize = self.messages[1:-keep_recent] if keep_recent > 0 else self.messages[1:]
+        initial_prompt_msg = self.messages[1]  # The initial task prompt (may include previous summary)
+        
+        # Start summarizing from index 2 (skip system and initial/merged prompt)
+        start_idx = 2
+        
+        # Messages to summarize: from start_idx to before recent
+        messages_to_summarize = self.messages[start_idx:-keep_recent] if keep_recent > 0 else self.messages[start_idx:]
         recent_msgs = self.messages[-keep_recent:] if keep_recent > 0 else []
         
-        if not messages_to_summarize:
+        # Need at least 2 messages to make summarization worthwhile
+        if len(messages_to_summarize) < 2:
             return
         
-        # Build history text for summarization
+        # Build history text for summarization, truncating if too long
         history_text = "\n\n".join(
             f"[{m['role'].upper()}]: {m.get('content', '')}" for m in messages_to_summarize
         )
+        
+        # Truncate history_text to avoid exceeding context in summary request
+        # Use ~16k tokens (64k chars) as safe limit for summary prompt
+        max_history_chars = 64000
+        if len(history_text) > max_history_chars:
+            history_text = (
+                history_text[:max_history_chars // 2] +
+                f"\n\n[... {len(messages_to_summarize)} messages truncated for summarization ...]\n\n" +
+                history_text[-max_history_chars // 2:]
+            )
         
         summary_prompt = self.render_template(
             self.config.history_summary_template,
@@ -243,16 +289,20 @@ class MiniAgent:
         })
         
         summary_content = summary_response.get("content", "")
-        summary_msg = {
+        
+        # Merge initial_prompt and summary into one user message to avoid consecutive user messages
+        merged_prompt = {
             "role": "user",
-            "content": f"<conversation_summary>\n{summary_content}\n</conversation_summary>\n\n"
-                       f"[The above is a summary of {len(messages_to_summarize)} previous messages. "
-                       f"Continue from where we left off.]"
+            "content": f"{initial_prompt_msg.get('content', '')}\n\n"
+                       f"<conversation_summary>\n{summary_content}\n</conversation_summary>\n\n"
+                       f"[Continue from where we left off.]"
         }
         
-        # Rebuild messages: system + summary + recent
-        self.messages = [system_msg, summary_msg] + recent_msgs
+        # Rebuild messages: system + merged_prompt + recent
+        self.messages = [system_msg, merged_prompt] + recent_msgs
         self._history_summarized = True
+        self._last_summary_msg_count = len(self.messages)
+        print(f"[DEBUG summarize] After rebuild: {len(self.messages)} messages, recent_msgs roles={[m['role'] for m in recent_msgs]}")
 
     def parse_action(self, response: dict) -> dict:
         """Parse the action from the message. Returns the action."""
@@ -263,6 +313,7 @@ class MiniAgent:
 
     def execute_action(self, action: dict) -> dict:
         try:
+            self.actions.append(action["action"])
             output = self.env.execute(action["action"])
         except subprocess.TimeoutExpired as e:
             output = e.output.decode("utf-8", errors="replace") if e.output else ""
@@ -271,11 +322,20 @@ class MiniAgent:
             )
         except TimeoutError:
             raise ExecutionTimeoutError(self.render_template(self.config.timeout_template, action=action, output=""))
+        print(f"[DEBUG execute_action] output={output}")
         self.has_finished(output)
+        print(f"[DEBUG execute_action] has_finished returned without raising")
         return output
 
     def has_finished(self, output: dict[str, str]):
         """Raises Submitted exception with final output if the agent has finished its task."""
-        lines = output.get("output", "").lstrip().splitlines(keepends=True)
-        if lines and lines[0].strip() in ["MINI_SWE_AGENT_FINAL_OUTPUT", "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"]:
-            raise Submitted("".join(lines[1:]))
+        text = output.get("output") or output.get("stdout") or ""
+        print(f"[DEBUG has_finished] text={repr(text)}, contains_finish={'COMPLETE_TASK' in text}")
+        if "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" in text or "MINI_SWE_AGENT_FINAL_OUTPUT" in text:
+            print(f"[DEBUG has_finished] RAISING Submitted!")
+            raise Submitted("")
+        print(f"[DEBUG has_finished] NOT raising")
+
+    def get_actions(self) -> list[str]:
+        """Return a copy of executed actions for this run."""
+        return self.actions.copy()
