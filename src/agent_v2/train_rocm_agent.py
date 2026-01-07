@@ -50,7 +50,7 @@ def verl_default_config() -> Dict[str, Any]:
             "use_kl_in_reward": False,
         },
         "data": {
-            "train_batch_size": 16,
+            "train_batch_size": 32,
             "max_prompt_length": 36864,
             "max_response_length": 2048,
         },
@@ -58,16 +58,16 @@ def verl_default_config() -> Dict[str, Any]:
             "rollout": {
                 "tensor_model_parallel_size": 1,
                 "n": 8,
-                "log_prob_micro_batch_size_per_gpu": 4,
+                "log_prob_micro_batch_size_per_gpu": 16,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
                 "gpu_memory_utilization": 0.4,
                 "free_cache_engine":False
             },
             "actor": {
-                "ppo_mini_batch_size": 16,
-                "ppo_micro_batch_size_per_gpu": 8,
-                "ulysses_sequence_parallel_size": 2,
+                "ppo_mini_batch_size": 32,
+                "ppo_micro_batch_size_per_gpu": 16,
+                "ulysses_sequence_parallel_size": 1,
                 "optim": {"lr": 1e-6},
                 "use_kl_loss": False,
                 "kl_loss_coef": 0.0,
@@ -80,12 +80,12 @@ def verl_default_config() -> Dict[str, Any]:
                 },
             },
             "ref": {
-                "log_prob_micro_batch_size_per_gpu": 4,
-                "ulysses_sequence_parallel_size": 2,
+                "log_prob_micro_batch_size_per_gpu": 16,
+                "ulysses_sequence_parallel_size": 1,
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "jsonjiao/qwen3-rocm-sft-v2-2000step",
+                "path": "jsonjiao/qwen3-rocm-sft-v3-3000step",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },
