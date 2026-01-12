@@ -17,6 +17,7 @@ import yaml
 from datasets import load_dataset
 from jinja2 import StrictUndefined, Template
 from rich.console import Console
+from rich.markup import escape as rich_escape
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
 from rich.table import Table
 
@@ -347,7 +348,7 @@ async def run_all_tasks(
             instance_id = instance.get("instance_id", f"task_{idx}")
             progress.update(
                 task, 
-                description=f"[cyan]Task {idx+1}/{len(dataset)}: {instance_id}[/cyan]"
+                description=f"[cyan]Task {idx+1}/{len(dataset)}: {rich_escape(instance_id)}[/cyan]"
             )
             model.n_calls = 0 
             result = await run_single_task_with_evaluation_info(
@@ -477,7 +478,7 @@ def test_single(
     )
     
     console.print(f"[bold blue]Testing single task with {model_name}[/bold blue]")
-    console.print(f"Instance ID: {instance.get('instance_id', 'N/A')}")
+    console.print(f"Instance ID: {rich_escape(instance.get('instance_id', 'N/A'))}")
     
     # Run task
     docker_server_url = f"http://{docker_server}"
@@ -501,23 +502,23 @@ def test_single(
     result_table.add_column("Key", style="cyan")
     result_table.add_column("Value", style="yellow")
     
-    result_table.add_row("Instance ID", result['instance_id'])
+    result_table.add_row("Instance ID", rich_escape(result['instance_id']))
     result_table.add_row("Success", "✓ Yes" if result['success'] else "✗ No")
     result_table.add_row("Reward", f"{result['reward']:.4f}")
     result_table.add_row("Speedup", f"{result['speedup']:.4f}")
-    result_table.add_row("Exit Status", result['exit_status'])
+    result_table.add_row("Exit Status", rich_escape(result['exit_status']))
     result_table.add_row("Model Calls", str(result.get('model_calls', 0)))
     result_table.add_row("Model Cost", f"${result.get('model_cost', 0.0):.4f}")
     
     if result['error']:
-        result_table.add_row("Error", f"[red]{result['error']}[/red]")
+        result_table.add_row("Error", f"[red]{rich_escape(result['error'])}[/red]")
     
     console.print(result_table)
     
     # Display git diff if available
     if result.get('git_diff'):
         console.print("\n[bold cyan]═══ Git Diff ═══[/bold cyan]")
-        console.print(result['git_diff'])
+        console.print(result['git_diff'], markup=False)
     else:
         console.print("\n[yellow]No git diff available[/yellow]")
     
@@ -902,7 +903,7 @@ def test_all_multi_thread(
                 # 更新进度描述
                 progress.update(
                     ptask,
-                    description=f"[cyan]Completed {len(results)}/{total} (last: {ins_id})[/cyan]"
+                    description=f"[cyan]Completed {len(results)}/{total} (last: {rich_escape(ins_id)})[/cyan]"
                 )
                 progress.advance(ptask)
 
@@ -1039,7 +1040,8 @@ def test_connection(
         
         console.print("\n[bold green]✓ Connection successful![/bold green]")
         console.print(f"\n[cyan]Response:[/cyan]")
-        console.print(f"{response['content']}\n")
+        console.print(response['content'], markup=False)
+        console.print()
         
         # Display model stats
         stats = model.get_template_vars()
@@ -1054,7 +1056,7 @@ def test_connection(
         
     except Exception as e:
         console.print(f"\n[bold red]✗ Connection failed![/bold red]")
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(f"[red]Error: {rich_escape(str(e))}[/red]")
         import traceback
         traceback.print_exc()
         raise typer.Exit(code=1)
@@ -1204,7 +1206,7 @@ def analyze_results(
         status = "✓" if result.get("success", False) else "✗"
         top_table.add_row(
             str(i),
-            result.get("instance_id", "N/A"),
+            rich_escape(result.get("instance_id", "N/A")),
             f"{result.get('reward', 0.0):.4f}",
             status
         )
@@ -1225,8 +1227,8 @@ def analyze_results(
             if len(error_msg) > 60:
                 error_msg = error_msg[:57] + "..."
             fail_table.add_row(
-                result.get("instance_id", "N/A"),
-                error_msg
+                rich_escape(result.get("instance_id", "N/A")),
+                rich_escape(error_msg)
             )
         
         if len(failures) > 10:

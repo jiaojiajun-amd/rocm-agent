@@ -137,7 +137,7 @@ async def rocm_agent(task: RocmProblem, llm: agl.LLM) -> None:
             "endpoint": llm.endpoint
         }
     }
-    config_spec = Path(builtin_config_dir /  "mini.yaml")
+    config_spec = Path(builtin_config_dir /  "mini_without_reflextion.yaml")
     config_path = get_config_path(config_spec)
     logger.info(f"config path {config_path}")
     config = yaml.safe_load(config_path.read_text())

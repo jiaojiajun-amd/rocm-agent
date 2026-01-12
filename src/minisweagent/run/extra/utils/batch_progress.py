@@ -10,6 +10,7 @@ from threading import Lock
 
 import yaml
 from rich.console import Group
+from rich.markup import escape as rich_escape
 from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
@@ -110,7 +111,7 @@ class RunBatchProgressManager:
             sorted_items = sorted(self._instances_by_exit_status.items(), key=lambda x: len(x[1]), reverse=True)
             for status, instances in sorted_items:
                 instances_str = _shorten_str(", ".join(reversed(instances)), 55)
-                t.add_row(status, str(len(instances)), instances_str)
+                t.add_row(rich_escape(status), str(len(instances)), rich_escape(instances_str))
         assert self.render_group is not None
         self.render_group.renderables[0] = t
 
@@ -128,18 +129,18 @@ class RunBatchProgressManager:
         with self._lock:
             self._task_progress_bar.update(
                 self._spinner_tasks[instance_id],
-                status=_shorten_str(message, 30),
-                instance_id=_shorten_str(instance_id, 25, shorten_left=True),
+                status=rich_escape(_shorten_str(message, 30)),
+                instance_id=rich_escape(_shorten_str(instance_id, 25, shorten_left=True)),
             )
         self._update_total_costs()
 
     def on_instance_start(self, instance_id: str):
         with self._lock:
             self._spinner_tasks[instance_id] = self._task_progress_bar.add_task(
-                description=f"Task {instance_id}",
+                description=f"Task {rich_escape(instance_id)}",
                 status="Task initialized",
                 total=None,
-                instance_id=instance_id,
+                instance_id=rich_escape(instance_id),
             )
 
     def on_instance_end(self, instance_id: str, exit_status: str | None) -> None:

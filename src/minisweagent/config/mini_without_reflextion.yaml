@@ -1,0 +1,175 @@
+agent:
+  system_template: |
+    You are a helpful assistant that can interact with a computer.
+
+    Your response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).
+    Include a THOUGHT section before your command where you explain your reasoning process.
+    Format your response as shown in <format_example>.
+
+    <format_example>
+    Your reasoning and analysis here. Explain why you want to perform the action.
+
+    ```bash
+    your_command_here
+    ```
+    </format_example>
+
+    Failure to follow these rules will cause your response to be rejected.
+  instance_template: |
+    Please solve this issue: {{task}}
+
+    You can execute bash commands and edit files to implement the necessary changes.
+
+    ## Workflow
+
+    <important>This is a single-pass optimization task. You should analyze, implement, and submit in one continuous flow without testing or benchmarking.</important>
+
+    1. Analyze the codebase by finding and reading relevant files
+    2. Identify the optimization opportunity based on the issue description
+    3. Edit the source code to implement your optimization
+    4. Submit your changes immediately by issuing: `echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`
+       <important>Do NOT run any tests or benchmarks. Submit directly after implementing your optimization.</important>
+
+    ## Important Rules
+
+    1. Every response must contain exactly one action
+    2. The action must be enclosed in triple backticks
+    3. Directory or environment variable changes are not persistent. Every action is executed in a new subshell.
+       However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files
+    4. <important>Do NOT run benchmarks, tests, or evaluation APIs. Just implement the optimization and submit.</important>
+
+    <system_information>
+    {{system}} {{release}} {{version}} {{machine}} {{processor}}
+    </system_information>
+
+    ## Formatting your response
+
+    Here is an example of a correct response:
+
+    <example_response>
+    THOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.
+
+    ```bash
+    ls -la
+    ```
+    </example_response>
+
+    ## Useful command examples
+
+    ### Create a new file:
+
+    ```bash
+    cat <<'EOF' > newfile.py
+    import numpy as np
+    hello = "world"
+    print(hello)
+    EOF
+    ```
+
+    ### Edit files with sed:
+
+    {%- if system == "Darwin" -%}
+    <important>
+    You are on MacOS. For all the below examples, you need to use `sed -i ''` instead of `sed -i`.
+    </important>
+    {%- endif -%}
+
+    ```bash
+    # Replace all occurrences
+    sed -i 's/old_string/new_string/g' filename.py
+
+    # Replace only first occurrence
+    sed -i 's/old_string/new_string/' filename.py
+
+    # Replace first occurrence on line 1
+    sed -i '1s/old_string/new_string/' filename.py
+
+    # Replace all occurrences in lines 1-10
+    sed -i '1,10s/old_string/new_string/g' filename.py
+    ```
+
+    ### View file content:
+
+    ```bash
+    # View specific lines with numbers
+    nl -ba filename.py | sed -n '10,20p'
+    ```
+
+    ### Any other command you want to run
+
+    ```bash
+    anything
+    ```
+  action_observation_template: |
+    <returncode>{{output.returncode}}</returncode>
+    {% if output.output | length < 10000 -%}
+    <output>
+    {{ output.output -}}
+    </output>
+    {%- else -%}
+    <note>
+    The output was long and has been summarized above. The full result was captured - do NOT retry or pipe to head/tail.
+    For file viewing, use head/tail/sed. For grep/find, use more selective patterns.
+    </note>
+    {%- set elided_chars = output.output | length - 10000 -%}
+    <output_head>
+    {{ output.output[:5000] }}
+    </output_head>
+    <elided_chars>
+    {{ elided_chars }} characters elided
+    </elided_chars>
+    <output_tail>
+    {{ output.output[-5000:] }}
+    </output_tail>
+    {%- endif -%}
+  format_error_template: |
+    Please always provide EXACTLY ONE action in triple backticks, found {{actions|length}} actions.
+    If you want to end the task, please issue the following command: `echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`
+    without any other command.
+    Else, please format your response exactly as follows:
+
+    <response_example>
+    Here are some thoughts about why you want to perform the action.
+
+    ```bash
+    <action>
+    ```
+    </response_example>
+
+    Note: In rare cases, if you need to reference a similar format in your command, you might have
+    to proceed in two steps, first writing TRIPLEBACKTICKSBASH, then replacing them with ```bash.
+  observation_reasoning_template: |
+    The following observation from a command execution is very long. Please analyze it and provide a concise summary
+    focusing on the key information relevant to completing the task. Include:
+    1. What the command did and its purpose
+    2. Key outputs, results, or patterns in the data
+    3. Any errors, warnings, or issues that need attention
+    4. Actionable next steps or recommendations
+
+    Observation:
+    {{observation}}
+
+    Provide your analysis in 2-3 concise paragraphs. Focus on what matters most for the task.
+  max_observation_tokens: 1000
+  max_context_tokens: 12000
+  keep_recent_messages: 4
+  step_limit: 0
+  cost_limit: 3.0
+
+environment:
+  cwd: "/app/rocm-libraries/projects/rocprim"
+  timeout: 1800
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+  environment_class: docker_remote
+model:
+  model_kwargs:
+    temperature: 0.0
+    drop_params: true
+
+    
+

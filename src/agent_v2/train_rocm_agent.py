@@ -50,23 +50,23 @@ def verl_default_config() -> Dict[str, Any]:
             "use_kl_in_reward": False,
         },
         "data": {
-            "train_batch_size": 32,
+            "train_batch_size": 8,
             "max_prompt_length": 36864,
             "max_response_length": 2048,
         },
         "actor_rollout_ref": {
             "rollout": {
                 "tensor_model_parallel_size": 1,
-                "n": 8,
-                "log_prob_micro_batch_size_per_gpu": 16,
+                "n": 16,
+                "log_prob_micro_batch_size_per_gpu": 2,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
                 "gpu_memory_utilization": 0.4,
                 "free_cache_engine":False
             },
             "actor": {
-                "ppo_mini_batch_size": 32,
-                "ppo_micro_batch_size_per_gpu": 16,
+                "ppo_mini_batch_size": 8,
+                "ppo_micro_batch_size_per_gpu": 2,
                 "ulysses_sequence_parallel_size": 1,
                 "optim": {"lr": 1e-6},
                 "use_kl_loss": False,
@@ -80,7 +80,7 @@ def verl_default_config() -> Dict[str, Any]:
                 },
             },
             "ref": {
-                "log_prob_micro_batch_size_per_gpu": 16,
+                "log_prob_micro_batch_size_per_gpu": 2,
                 "ulysses_sequence_parallel_size": 1,
                 "fsdp_config": {"param_offload": True},
             },

@@ -65,4 +65,4 @@ export OPENAI_TIMEOUT=1800
 export REQUEST_TIMEOUT=1800
 export VLLM_USE_V1=1
 
-AGL_MANAGED_STORE=0 python src/agent_v2/train_rocm_agent.py --external-store-address http://localhost:9999 
+AGL_MANAGED_STORE=0 python src/agent_v2/train_rocm_agent.py --external-store-address http://localhost:9999 --n-runners 32

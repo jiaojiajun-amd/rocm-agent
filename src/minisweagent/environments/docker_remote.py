@@ -16,7 +16,7 @@ class RemoteDockerEnvironmentConfig:
     timeout: int = 1800  # 默认 1800 秒（30 分钟）用于长时间运行的命令
     executable: str = os.getenv("MSWEA_DOCKER_EXECUTABLE", "docker")
     run_args: list[str] = field(default_factory=lambda: ["--rm"])
-    container_timeout: str = "6h"
+    container_timeout: str = "24h"
     pull_timeout: int = 400
     max_retries: int = 3  # 仅用于启动容器
     retry_delay: int = 5
