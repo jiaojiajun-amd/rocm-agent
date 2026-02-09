@@ -79,6 +79,10 @@ class LitellmModel:
         self.n_calls += 1
         self.cost += cost
         GLOBAL_MODEL_STATS.add(cost)
+        
+        # Debug log for model call
+        print(f"[DEBUG LitellmModel] model_call #{self.n_calls}, endpoint: {self.endpoint}, model: {self.config.model_name}")
+        
         return {
             "content": response.choices[0].message.content or "",  # type: ignore
             "extra": {

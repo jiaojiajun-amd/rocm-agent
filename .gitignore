@@ -5,5 +5,12 @@ wandb
 agentops.log
 training_data_v2/
 training_data_v3/
+training_data_v4/
+training_data_v4_bkp/
+error_logs/
 results_debug/
 results_mem/
+slime_trainer/
+ray_tmp/
+*.pyc
+checkpoints/

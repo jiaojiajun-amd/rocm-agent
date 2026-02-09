@@ -7,7 +7,7 @@ docker run -it \
 	--cap-add SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	--privileged \
-    -v /home/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
-	-v /mnt/raid0/jiajjiao/models:/models \
+    -v /data/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
     --name sglang-rocm \
+	-w /home/jiajjiao/rocm-agent \
 	docker.io/rocm/sgl-dev:v0.5.5-rocm700-mi30x-20251108

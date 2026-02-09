@@ -38,9 +38,9 @@ from datasets import Dataset as HuggingFaceDataset
 
 import agentlightning as agl
 
-PROJECT_NAME = "rocm-agent-original-rl"
-EXPERIMENT_NAME = "jsonjiao/qwen3-rocm-sft-v2-2000step-32k_rocprim_v4_eval_v3"
-DEFAULT_LOCAL_DIR = F"/app/checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
+PROJECT_NAME = "rocm-agent"
+EXPERIMENT_NAME = "Qwen/Qwen3-Coder-30B-A3B-Instruct-32k_rocprim_v4_eval_v3-reward-v2"
+DEFAULT_LOCAL_DIR = F"./checkpoints/{PROJECT_NAME}/{EXPERIMENT_NAME}/"
 
 
 def verl_default_config() -> Dict[str, Any]:
@@ -52,7 +52,7 @@ def verl_default_config() -> Dict[str, Any]:
         "data": {
             "train_batch_size": 8,
             "max_prompt_length": 36864,
-            "max_response_length": 2048,
+            "max_response_length": 4096,
         },
         "actor_rollout_ref": {
             "rollout": {
@@ -61,7 +61,7 @@ def verl_default_config() -> Dict[str, Any]:
                 "log_prob_micro_batch_size_per_gpu": 2,
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
-                "gpu_memory_utilization": 0.4,
+                "gpu_memory_utilization": 0.5,
                 "free_cache_engine":False
             },
             "actor": {
@@ -85,7 +85,7 @@ def verl_default_config() -> Dict[str, Any]:
                 "fsdp_config": {"param_offload": True},
             },
             "model": {
-                "path": "jsonjiao/qwen3-rocm-sft-v3-3000step",
+                "path": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
                 "use_remove_padding": True,
                 "enable_gradient_checkpointing": True,
             },
@@ -99,8 +99,8 @@ def verl_default_config() -> Dict[str, Any]:
             "experiment_name": EXPERIMENT_NAME,
             "default_local_dir":DEFAULT_LOCAL_DIR,
             "nnodes": 1,
-            "save_freq": 5,
-            "test_freq": 5,
+            "save_freq": 10,
+            "test_freq": 10,
             "total_epochs": 50,
         },
     }

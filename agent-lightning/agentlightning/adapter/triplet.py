@@ -780,6 +780,9 @@ class LlmProxyTraceToTriplet(TraceToTripletBase):
         # 2) Collect LLM calls with token IDs.
         llm_items: List[Dict[str, Any]] = []
         seen_request_ids: set[str] = set()
+        skipped_no_token_ids = 0
+        skipped_no_name_match = 0
+        
         for s in spans:
             attrs = s.attributes or {}
             prompt_ids: List[int] = []
@@ -790,6 +793,8 @@ class LlmProxyTraceToTriplet(TraceToTripletBase):
             elif s.name == "litellm_request":
                 # Some proxies never include token ids here. Ignore unless present.
                 prompt_ids, resp_ids = self._extract_tokens_from_openai(attrs)
+            else:
+                skipped_no_name_match += 1
 
             if prompt_ids and resp_ids:
                 rid = self._request_id_from_attrs(attrs)
@@ -807,6 +812,8 @@ class LlmProxyTraceToTriplet(TraceToTripletBase):
                         request_id=rid,
                     )
                 )
+            elif s.name in ("raw_gen_ai_request", "litellm_request"):
+                skipped_no_token_ids += 1
 
         # Order LLM items by sequence only.
         llm_items.sort(key=lambda x: x["seq"])
@@ -845,5 +852,13 @@ class LlmProxyTraceToTriplet(TraceToTripletBase):
                     ),
                 )
             )
+
+        # Debug log: detailed triplet extraction statistics
+        print(f"[DEBUG triplet] Total spans: {len(spans)}")
+        print(f"[DEBUG triplet] Skipped (no name match): {skipped_no_name_match}")
+        print(f"[DEBUG triplet] Skipped (no token_ids): {skipped_no_token_ids}")
+        print(f"[DEBUG triplet] LLM items with token_ids: {len(llm_items)}")
+        print(f"[DEBUG triplet] Rewards found: {len(rewards)}")
+        print(f"[DEBUG triplet] Final triplets: {len(triplets)}")
 
         return triplets

@@ -136,7 +136,7 @@ class MiniAgent:
         while True:
             self._step_count += 1
             elapsed = time.time() - self._start_time
-            print(f"[DEBUG run] Step {self._step_count}, elapsed time: {elapsed:.1f}s ({elapsed/60:.1f}min)")
+            print(f"[DEBUG run] Step {self._step_count}, model_calls: {self.model.n_calls}, tracked_calls: {len(self.all_model_calls)}, elapsed time: {elapsed:.1f}s ({elapsed/60:.1f}min)")
             try:
                 self.step()
             except NonTerminatingException as e:
@@ -178,6 +178,7 @@ class MiniAgent:
         
         # Check if observation is too long
         token_count = self.count_tokens(observation)
+        print(f"[DEBUG get_observation] observation_tokens={token_count}, max_tokens={self.config.max_observation_tokens}, will_reason={token_count > self.config.max_observation_tokens}")
         if token_count > self.config.max_observation_tokens:
             # Perform reasoning to compress the observation
             reasoning = self._reason_about_observation(observation)
@@ -190,6 +191,7 @@ class MiniAgent:
     
     def _reason_about_observation(self, observation: str) -> str:
         """Use model to reason about and summarize a long observation."""
+        print(f"[DEBUG _reason_about_observation] Triggered! observation_len={len(observation)}")
         reasoning_prompt = self.render_template(
             self.config.observation_reasoning_template,
             observation=observation
@@ -200,6 +202,7 @@ class MiniAgent:
             {"role": "user", "content": reasoning_prompt}
         ]
         
+        print(f"[DEBUG _reason_about_observation] Calling model for reasoning...")
         reasoning_response = self.model.query(reasoning_messages)
         # Track this model call for training data
         self.all_model_calls.append({
@@ -208,6 +211,7 @@ class MiniAgent:
             "response": reasoning_response.copy(),
         })
         reasoning_content = reasoning_response.get("content", "")
+        print(f"[DEBUG _reason_about_observation] Got reasoning, len={len(reasoning_content)}")
         return f"<observation_summary>\n{reasoning_content}\n</observation_summary>"
 
     def _estimate_context_tokens(self) -> int:

@@ -1,30 +1,4 @@
-2026-01-11 17:57:31,048 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
-2026-01-11 17:57:31,057 - INFO - Session Replay for default trace: http://localhost:52637/notavailable/sessions?trace_id=fbac54dcc045d5c365e32cdde545dd5f
-2026-01-11 17:57:31,063 - INFO - You're on the agentops free plan 🤔
-2026-01-12 12:56:32,074 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Request timed out.2026-01-12 13:30:35,449 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-
-
-2026-01-12 13:30:35,475 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-r.. Received Model Group=jsonjiao/q2026-01-12 13:30:35,351 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
- 2026-01-12 13:30:35,413 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-t2026-01-12 13:30:35,429 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-
-2026-01-12 13:30:35,427 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-22026-01-12 13:30:35,362 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-est timed out.
-2026-01-12 13:30:35,457 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-:2026-01-12 13:30:35,523 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
- Connection error.
-
-,449 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-stream_wrapper: Connection error.
-
-2026-01-12 12:56:42,508 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Request timed out.
-2026-01-12 13:30:35,462 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-
-2026-01-12 13:30:35,2026-01-12 13:30:35,527 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-01-12 13:30:35,364 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
-: Connection error.
-r.. Received Model Group=jsonjiao/qwen3-rocm-sft-v3-3000step\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
-2026-01-12 11:52:11,434 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: Hosted_vllmException - Connection error.. Received Model Group=jsonjiao/qwen3-rocm-sft-v3-3000step\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
-2026-01-12 13:30:35,402 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Connection error.
+2026-02-08 07:46:03,790 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
+2026-02-08 07:46:03,802 - INFO - Session Replay for default trace: http://localhost:43065/notavailable/sessions?trace_id=5cfaaabca51933a7cabd7ac46262a3de
+2026-02-08 07:46:03,825 - INFO - You're on the agentops free plan 🤔
+2026-02-09 02:42:34,078 - ERROR - [OPENAI WRAPPER] Error in chat_completion_stream_wrapper: Error code: 408 - {'error': {'message': 'litellm.Timeout: APITimeoutError - Request timed out. Error_str: Request timed out. - timeout value=600.0, time taken=600.01 seconds\n\nDeployment Info: request_timeout: None\ntimeout: None. Received Model Group=Qwen/Qwen3-Coder-30B-A3B-Instruct\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '408'}}

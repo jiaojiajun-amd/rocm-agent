@@ -472,6 +472,12 @@ class AgentModeDaemon:
         else:
             triplets = self.adapter.adapt(spans)
 
+        # Debug log: spans and triplets with span names breakdown
+        from collections import Counter
+        span_names = Counter(s.name for s in spans)
+        print(f"[DEBUG daemon] Rollout {rollout.rollout_id}: total_spans={len(spans)}, triplets={len(triplets)}")
+        print(f"[DEBUG daemon] Span names: {dict(span_names)}")
+
         # Extract final reward from triplets
         final_reward: Optional[float] = None
         if triplets:

@@ -6,8 +6,8 @@ docker run -it \
 	--cap-add SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	--privileged \
-    -v /home/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
+    -v /data/jiajjiao/rocm-agent:/home/jiajjiao/rocm-agent \
 	--shm-size 128G \
-	-w /app \
+	-w /home/jiajjiao/rocm-agent \
     --name rocm-agent \
 	rocm-rl

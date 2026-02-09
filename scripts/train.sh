@@ -64,5 +64,9 @@ export LITELLM_REQUEST_TIMEOUT=1800
 export OPENAI_TIMEOUT=1800
 export REQUEST_TIMEOUT=1800
 export VLLM_USE_V1=1
+export RAY_TMPDIR=/home/jiajjiao/rocm-agent/ray_tmp
+export TMPDIR=/home/jiajjiao/rocm-agent/ray_tmp
 
-AGL_MANAGED_STORE=0 python src/agent_v2/train_rocm_agent.py --external-store-address http://localhost:9999 --n-runners 32
+export USE_OTEL_LITELLM_REQUEST_SPAN=true
+
+AGL_MANAGED_STORE=0 python src/agent_v2/train_rocm_agent.py --external-store-address http://localhost:9999 --n-runners 16
